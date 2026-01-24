@@ -17,6 +17,10 @@ class ChatController extends Controller
         ]);
 
         $chatbot = \App\Models\Chatbot::findOrFail($request->chatbot_id);
+        
+        // --- LEAD LOGGING ---
+        $this->logLead($chatbot, $request);
+        
         $userMessage = $request->message;
 
         try {
@@ -103,6 +107,46 @@ class ChatController extends Controller
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error("Chat Error: " . $e->getMessage());
             return response()->json(['error' => 'Failed to generate response.'], 500);
+        }
+    }
+
+    private function logLead($chatbot, $request)
+    {
+        try {
+            $ip = $request->ip();
+            $lead = \App\Models\Lead::where('chatbot_id', $chatbot->id)
+                ->where('ip_address', $ip)
+                ->first();
+
+            if ($lead) {
+                $lead->increment('visit_count');
+                $lead->last_visit_at = now();
+                $lead->save();
+            } else {
+                $locationData = [];
+                try {
+                    // Using ip-api.com (free for non-commercial/testing)
+                    $response = \Illuminate\Support\Facades\Http::get("http://ip-api.com/json/{$ip}");
+                    if ($response->successful()) {
+                        $locationData = $response->json();
+                    }
+                } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::warning("GeoIP lookup failed: " . $e->getMessage());
+                }
+
+                \App\Models\Lead::create([
+                    'chatbot_id' => $chatbot->id,
+                    'ip_address' => $ip,
+                    'city' => $locationData['city'] ?? 'Unknown',
+                    'region' => $locationData['regionName'] ?? 'Unknown',
+                    'country' => $locationData['country'] ?? 'Unknown',
+                    'visit_count' => 1,
+                    'last_visit_at' => now(),
+                    'user_agent' => $request->userAgent(),
+                ]);
+            }
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error("Lead logging failed: " . $e->getMessage());
         }
     }
 }

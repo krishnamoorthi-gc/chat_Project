@@ -65,6 +65,25 @@
                         </div>
                     </div>
                 </div>
+
+                <div class="stat-card">
+                    <div class="stat-info">
+                        <p>Total Leads</p>
+                        <h3>{{ $totalLeads }}</h3>
+                        <div class="stat-trend up" style="color: #6c5dd3;">
+                            <i class="bi bi-person-plus-fill"></i> New Growth
+                        </div>
+                    </div>
+                    <div class="stat-circle">
+                        <svg width="70" height="70" viewBox="0 0 36 36">
+                            <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#eee" stroke-width="3" />
+                             <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#6c5dd3" stroke-width="3" stroke-dasharray="25, 100" />
+                        </svg>
+                        <div style="position: absolute; top:0; left:0; width:100%; height:100%; display:flex; align-items:center; justify-content:center; font-size: 0.75rem; font-weight:700; color:#6c5dd3;">
+                            {{ $totalLeads > 0 ? 'Live' : '0%' }}
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Charts Row -->

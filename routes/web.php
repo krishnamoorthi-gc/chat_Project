@@ -17,6 +17,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
     
     Route::resource('chatbots', App\Http\Controllers\ChatbotController::class);
+    Route::resource('leads', App\Http\Controllers\LeadController::class);
     
     Route::post('/knowledge/upload', [App\Http\Controllers\KnowledgeController::class, 'upload'])->name('knowledge.upload');
     Route::post('/knowledge/crawl', [App\Http\Controllers\KnowledgeController::class, 'crawl'])->name('knowledge.crawl');

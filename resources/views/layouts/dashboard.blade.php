@@ -100,7 +100,7 @@
                         <i class="bi bi-chat-text"></i>
                         <span>Conversations</span>
                     </a>
-                    <a href="#" class="nav-item-custom">
+                    <a href="{{ route('leads.index') }}" class="nav-item-custom {{ Route::is('leads.*') ? 'active' : '' }}">
                         <i class="bi bi-people"></i>
                         <span>Leads</span>
                     </a>
