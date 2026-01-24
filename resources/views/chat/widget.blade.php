@@ -241,9 +241,29 @@
                 <i class="bi bi-robot"></i>
             @endif
         </div>
-        <div class="header-info">
-            <h6>{{ $chatbot->settings['branding']['display_name'] ?? $chatbot->name }}</h6>
-            <span><span class="online-dot"></span> {{ __('widget.online_status') }}</span>
+        <div class="header-actions" style="margin-left:auto; display:flex; align-items:center; gap:8px;">
+            <!-- Dropdown Menu -->
+            <div class="dropdown" style="position:relative;">
+                <button onclick="toggleMenu()" class="icon-btn" style="background:transparent; border:none; color:white; font-size:1.1rem; cursor:pointer; width:30px; height:30px; display:flex; align-items:center; justify-content:center; border-radius:50%; transition:background 0.2s;">
+                    <i class="bi bi-three-dots-vertical"></i>
+                </button>
+                <div id="menuDropdown" style="display:none; position:absolute; top:100%; right:0; background:white; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,0.15); min-width:180px; overflow:hidden; z-index:20; margin-top:8px; animation: fadeIn 0.1s ease-out;">
+                    <button onclick="refreshChat()" style="width:100%; text-align:left; padding:12px 16px; border:none; background:transparent; font-size:0.85rem; color:#334155; cursor:pointer; display:flex; align-items:center; gap:10px; transition:background 0.1s;">
+                        <i class="bi bi-arrow-clockwise"></i> Refresh chat
+                    </button>
+                    <button onclick="downloadChat()" style="width:100%; text-align:left; padding:12px 16px; border:none; background:transparent; font-size:0.85rem; color:#334155; cursor:pointer; display:flex; align-items:center; gap:10px; transition:background 0.1s; border-top:1px solid #f1f5f9;">
+                        <i class="bi bi-download"></i> Download
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Window Controls -->
+            <button onclick="toggleMaximize()" class="icon-btn" style="background:transparent; border:none; color:white; font-size:1rem; cursor:pointer; width:30px; height:30px; display:flex; align-items:center; justify-content:center; border-radius:50%; transition:background 0.2s;">
+                <i class="bi bi-arrows-angle-expand" id="maxIcon"></i>
+            </button>
+            <button onclick="closeWidget()" class="icon-btn" style="background:transparent; border:none; color:white; font-size:1.2rem; cursor:pointer; width:30px; height:30px; display:flex; align-items:center; justify-content:center;  border-radius:50%; transition:background 0.2s;">
+                <i class="bi bi-x"></i>
+            </button>
         </div>
     </div>
 
@@ -259,6 +279,17 @@
             </div>
             <div class="message bot">
                 {{ $chatbot->settings['branding']['welcome_message'] ?? __('widget.welcome_default') }}
+                
+                @if($chatbot->settings['show_suggested_questions'] ?? false)
+                    <div style="margin-top:12px; display:flex; flex-direction:column; gap:8px;">
+                        <span style="font-size:0.75rem; font-weight:600; opacity:0.8;">Ask me about:</span>
+                         @foreach($chatbot->settings['suggested_questions'] ?? [] as $question)
+                            <button onclick="askQuestion('{{ addslashes($question) }}')" style="text-align:left; background: #f1f5f9; border: 1px solid #cbd5e1; padding: 8px 12px; border-radius: 12px; font-size: 0.85rem; cursor: pointer; color: var(--primary-color); transition: all 0.2s; font-weight: 500;">
+                                {{ $question }}
+                            </button>
+                         @endforeach
+                    </div>
+                @endif
             </div>
         </div>
     </div>
@@ -283,6 +314,9 @@
         const typingIndicator = document.getElementById('typingIndicator');
         const leadFormOverlay = document.getElementById('leadFormOverlay');
         const leadForm = document.getElementById('leadForm');
+        const menuDropdown = document.getElementById('menuDropdown');
+        
+        let isMaximized = false;
         
         // Lead Form Logic
         const chatbotId = '{{ $chatbot->id }}';
@@ -325,6 +359,65 @@
                     btn.disabled = false;
                 });
             };
+        }
+
+        function toggleMenu() {
+            if(menuDropdown)
+                menuDropdown.style.display = (menuDropdown.style.display === 'block') ? 'none' : 'block';
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            if (menuDropdown && !event.target.closest('.dropdown')) {
+                menuDropdown.style.display = 'none';
+            }
+        });
+
+        function refreshChat() {
+            if(confirm('Start a new conversation?')) {
+                location.reload();
+            }
+        }
+
+        function downloadChat() {
+            let transcript = "Chat Transcript - " + new Date().toLocaleString() + "\n\n";
+            const messages = document.querySelectorAll('.message');
+            messages.forEach(msg => {
+                const role = msg.classList.contains('user') ? 'User' : 'Bot';
+                transcript += role + ": " + msg.innerText + "\n\n";
+            });
+            
+            const blob = new Blob([transcript], { type: 'text/plain' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'chat-transcript.txt';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+            if(menuDropdown) menuDropdown.style.display = 'none';
+        }
+
+        function toggleMaximize() {
+            isMaximized = !isMaximized;
+            const icon = document.getElementById('maxIcon');
+            if(isMaximized) {
+                icon.className = 'bi bi-fullscreen-exit';
+                window.parent.postMessage({ action: 'maximize_chatbot', chatbotId: '{{ $chatbot->id }}' }, '*');
+            } else {
+                icon.className = 'bi bi-arrows-angle-expand';
+                window.parent.postMessage({ action: 'restore_chatbot', chatbotId: '{{ $chatbot->id }}' }, '*');
+            }
+        }
+
+        function closeWidget() {
+             window.parent.postMessage({ action: 'close_chatbot', chatbotId: '{{ $chatbot->id }}' }, '*');
+        }
+
+        function askQuestion(question) {
+            userInput.value = question;
+            sendMessage();
         }
 
         const translations = {

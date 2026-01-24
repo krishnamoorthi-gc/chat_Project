@@ -87,6 +87,16 @@ class ChatbotController extends Controller
             $settings['branding'] = array_merge($settings['branding'] ?? [], $request->branding);
         }
 
+        if ($request->has('suggested_questions')) {
+            $settings['suggested_questions'] = array_filter($request->suggested_questions, function($value) { return !is_null($value) && $value !== ''; });
+        }
+        
+        // Handle boolean toggle for suggestions
+        if ($request->has('response_mode')) {
+             // We are in the main settings form
+             $settings['show_suggested_questions'] = $request->has('show_suggested_questions');
+        }
+
         // Handle Icon Upload
         if ($request->hasFile('icon')) {
             // Delete old icon if it exists

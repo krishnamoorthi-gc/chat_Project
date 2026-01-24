@@ -420,6 +420,55 @@
                             </div>
                         </div>
 
+                        <!-- Suggested Questions Section -->
+                        <div class="mb-4">
+                             <div class="d-flex justify-content-between align-items-center mb-2">
+                                <label class="form-label fw-bold small text-muted text-uppercase mb-0">Initial Suggested Questions</label>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" role="switch" id="showSuggestedQuestions" name="show_suggested_questions" value="1" {{ ($chatbot->settings['show_suggested_questions'] ?? false) ? 'checked' : '' }}>
+                                    <label class="form-check-label small" for="showSuggestedQuestions">Enable</label>
+                                </div>
+                            </div>
+                            <div class="p-3 bg-light rounded-4">
+                                <p class="text-muted small mb-3">Add up to 4 questions users can click to start the chat.</p>
+                                <div id="suggested-questions-container">
+                                    @php $suggestions = $chatbot->settings['suggested_questions'] ?? []; @endphp
+                                    @foreach($suggestions as $index => $question)
+                                        <div class="input-group mb-2">
+                                            <span class="input-group-text border-0 bg-white"><i class="bi bi-chat-right-text"></i></span>
+                                            <input type="text" class="form-control border-0" name="suggested_questions[]" value="{{ $question }}" placeholder="e.g. What is your pricing?">
+                                            <button class="btn btn-white bg-white text-danger border-0" type="button" onclick="this.closest('.input-group').remove()"><i class="bi bi-trash"></i></button>
+                                        </div>
+                                    @endforeach
+                                    @if(count($suggestions) == 0)
+                                        <div class="input-group mb-2">
+                                            <span class="input-group-text border-0 bg-white"><i class="bi bi-chat-right-text"></i></span>
+                                            <input type="text" class="form-control border-0" name="suggested_questions[]" placeholder="e.g. What is your pricing?">
+                                        </div>
+                                    @endif
+                                </div>
+                                <button type="button" class="btn btn-sm btn-link text-decoration-none fw-bold mt-2" onclick="addSuggestedQuestion()"><i class="bi bi-plus-circle me-1"></i> Add Another Question</button>
+                            </div>
+                        </div>
+
+                        <script>
+                            function addSuggestedQuestion() {
+                                const container = document.getElementById('suggested-questions-container');
+                                if (container.children.length >= 4) {
+                                    alert('Max 4 suggested questions allowed.');
+                                    return;
+                                }
+                                const div = document.createElement('div');
+                                div.className = 'input-group mb-2';
+                                div.innerHTML = `
+                                    <span class="input-group-text border-0 bg-white"><i class="bi bi-chat-right-text"></i></span>
+                                    <input type="text" class="form-control border-0" name="suggested_questions[]" placeholder="e.g. How do I get started?">
+                                    <button class="btn btn-white bg-white text-danger border-0" type="button" onclick="this.closest('.input-group').remove()"><i class="bi bi-trash"></i></button>
+                                `;
+                                container.appendChild(div);
+                            }
+                        </script>
+
                         <div class="mb-4">
                             <label class="form-label fw-bold small text-muted text-uppercase">System Instructions (Prompt)</label>
                             <textarea class="form-control bg-light border-0" rows="6" name="prompt_template" style="border-radius: 10px;" placeholder="e.g. You are a professional accountant. Give concise answers...">{{ $chatbot->prompt_template }}</textarea>
