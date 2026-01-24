@@ -12,6 +12,8 @@ class Lead extends Model
     protected $fillable = [
         'chatbot_id',
         'ip_address',
+        'name',
+        'email',
         'city',
         'region',
         'country',

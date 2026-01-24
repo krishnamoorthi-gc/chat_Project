@@ -363,6 +363,7 @@
                 </div>
             </div>
         </div>
+        </div>
 
         <!-- 4. Leads Tab -->
         <div class="tab-pane fade" id="leads" role="tabpanel">
@@ -381,6 +382,29 @@
                         <div class="mb-4">
                             <label class="form-label fw-bold small text-muted text-uppercase">Chatbot Name</label>
                             <input type="text" class="form-control bg-light border-0" name="name" value="{{ $chatbot->name }}" style="border-radius: 10px;">
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold small text-muted text-uppercase">Chatbot Language</label>
+                            <select class="form-select bg-light border-0" name="language" style="border-radius: 10px;">
+                                <option value="en" {{ ($chatbot->settings['language'] ?? 'en') == 'en' ? 'selected' : '' }}>English</option>
+                                <option value="es" {{ ($chatbot->settings['language'] ?? 'en') == 'es' ? 'selected' : '' }}>Spanish (Español)</option>
+                                <option value="fr" {{ ($chatbot->settings['language'] ?? 'en') == 'fr' ? 'selected' : '' }}>French (Français)</option>
+                                <option value="de" {{ ($chatbot->settings['language'] ?? 'en') == 'de' ? 'selected' : '' }}>German (Deutsch)</option>
+                                <option value="it" {{ ($chatbot->settings['language'] ?? 'en') == 'it' ? 'selected' : '' }}>Italian (Italiano)</option>
+                                <option value="pt" {{ ($chatbot->settings['language'] ?? 'en') == 'pt' ? 'selected' : '' }}>Portuguese (Português)</option>
+                            </select>
+                        </div>
+
+
+                        <div class="mb-4">
+                            <div class="form-check form-switch p-0 d-flex justify-content-between align-items-center bg-light rounded-4 p-3">
+                                <div>
+                                    <label class="form-check-label fw-bold small text-muted text-uppercase mb-0" for="enableLeadForm">Collect User Lead Data</label>
+                                    <p class="text-muted small mb-0 mt-1" style="font-size: 0.75rem;">Ask for Name, Email, City & Country before starting chat.</p>
+                                </div>
+                                <input class="form-check-input ms-0" type="checkbox" role="switch" id="enableLeadForm" name="lead_form_enabled" value="1" {{ ($chatbot->settings['lead_form_enabled'] ?? false) ? 'checked' : '' }} style="width: 2.5em; height: 1.25em;">
+                            </div>
                         </div>
 
                         <div class="mb-4">

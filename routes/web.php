@@ -33,9 +33,14 @@ Route::middleware('auth')->group(function () {
 
 // Public Chat Routes
 Route::get('/chat/{chatbot}/widget', function (\App\Models\Chatbot $chatbot) {
+    // Prioritize query parameter, then chatbot setting, then default
+    if (!request()->has('lang') && isset($chatbot->settings['language'])) {
+        app()->setLocale($chatbot->settings['language']);
+    }
     return view('chat.widget', compact('chatbot'));
 })->name('chat.widget');
 
 Route::post('/chat/send', [App\Http\Controllers\ChatController::class, 'send'])->name('chat.send');
+Route::post('/chat/lead', [App\Http\Controllers\ChatController::class, 'submitLead'])->name('chat.lead');
 
 

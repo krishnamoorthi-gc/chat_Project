@@ -149,4 +149,47 @@ class ChatController extends Controller
             \Illuminate\Support\Facades\Log::error("Lead logging failed: " . $e->getMessage());
         }
     }
+
+    public function submitLead(Request $request)
+    {
+        $request->validate([
+            'chatbot_id' => 'required|exists:chatbots,id',
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255',
+            'city' => 'nullable|string|max:255',
+            'country' => 'nullable|string|max:255',
+        ]);
+
+        $chatbot = \App\Models\Chatbot::findOrFail($request->chatbot_id);
+        $ip = $request->ip();
+
+        // Find existing lead by IP or create new
+        $lead = \App\Models\Lead::where('chatbot_id', $chatbot->id)
+            ->where('ip_address', $ip)
+            ->first();
+
+        if ($lead) {
+            $lead->update([
+                'name' => $request->name,
+                'email' => $request->email,
+                'city' => $request->city ?: $lead->city, // Prefer provided city, fallback to existing (which might be from IP)
+                'country' => $request->country ?: $lead->country,
+                'last_visit_at' => now(),
+            ]);
+        } else {
+            \App\Models\Lead::create([
+                'chatbot_id' => $chatbot->id,
+                'ip_address' => $ip,
+                'name' => $request->name,
+                'email' => $request->email,
+                'city' => $request->city ?? 'Unknown',
+                'country' => $request->country ?? 'Unknown',
+                'visit_count' => 1,
+                'last_visit_at' => now(),
+                'user_agent' => $request->userAgent(),
+            ]);
+        }
+
+        return response()->json(['status' => 'success']);
+    }
 }

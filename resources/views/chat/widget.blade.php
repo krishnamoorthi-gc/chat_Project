@@ -195,6 +195,44 @@
     </style>
 </head>
 <body>
+    <!-- Lead Capture Form -->
+    @if($chatbot->settings['lead_form_enabled'] ?? false)
+    <div id="leadFormOverlay" style="display:none; position:absolute; top:0; left:0; width:100%; height:100%; background: var(--bg-body); z-index:100; flex-direction:column; justify-content:center; padding:30px;">
+        <div class="text-center mb-4">
+            <div style="width: 60px; height: 60px; background:white; border-radius:20px; box-shadow:0 10px 30px rgba(0,0,0,0.05); display:inline-flex; align-items:center; justify-content:center; margin-bottom:20px;">
+                @if(isset($chatbot->settings['branding']['icon_url']))
+                    <img src="{{ $chatbot->settings['branding']['icon_url'] }}" style="width:100%; height:100%; object-fit:cover; border-radius:20px;">
+                @else
+                    <i class="bi bi-robot fs-1" style="color: var(--primary-color);"></i>
+                @endif
+            </div>
+            <h4 style="font-weight:800; margin-bottom:8px; color:var(--text-main);">Welcome! 👋</h4>
+            <p style="font-size:0.9rem; color:var(--text-muted); margin:0;">Please introduce yourself to start chatting.</p>
+        </div>
+        <form id="leadForm" style="background:white; padding:25px; border-radius:20px; box-shadow:0 4px 20px rgba(0,0,0,0.02);">
+            <div style="margin-bottom:15px;">
+                <label style="font-size:0.75rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; margin-bottom:6px; display:block;">Full Name</label>
+                <input type="text" name="name" required style="width:100%; padding:12px; border:2px solid #f1f5f9; border-radius:12px; font-family:inherit; outline:none; transition:border-color 0.2s;" onfocus="this.style.borderColor=getComputedStyle(document.documentElement).getPropertyValue('--primary-color')">
+            </div>
+            <div style="margin-bottom:15px;">
+                <label style="font-size:0.75rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; margin-bottom:6px; display:block;">Email Address</label>
+                <input type="email" name="email" required style="width:100%; padding:12px; border:2px solid #f1f5f9; border-radius:12px; font-family:inherit; outline:none; transition:border-color 0.2s;" onfocus="this.style.borderColor=getComputedStyle(document.documentElement).getPropertyValue('--primary-color')">
+            </div>
+            <div style="display:flex; gap:10px; margin-bottom:20px;">
+                <div style="flex:1;">
+                    <label style="font-size:0.75rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; margin-bottom:6px; display:block;">City</label>
+                    <input type="text" name="city" required style="width:100%; padding:12px; border:2px solid #f1f5f9; border-radius:12px; font-family:inherit; outline:none; transition:border-color 0.2s;" onfocus="this.style.borderColor=getComputedStyle(document.documentElement).getPropertyValue('--primary-color')">
+                </div>
+                <div style="flex:1;">
+                    <label style="font-size:0.75rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; margin-bottom:6px; display:block;">Country</label>
+                    <input type="text" name="country" required style="width:100%; padding:12px; border:2px solid #f1f5f9; border-radius:12px; font-family:inherit; outline:none; transition:border-color 0.2s;" onfocus="this.style.borderColor=getComputedStyle(document.documentElement).getPropertyValue('--primary-color')">
+                </div>
+            </div>
+            <button type="submit" id="startChatBtn" style="width:100%; background:var(--primary-gradient); color:white; border:none; padding:14px; border-radius:12px; font-weight:600; cursor:pointer; font-size:1rem; box-shadow:0 4px 15px rgba(99, 102, 241, 0.3);">Start Conversation</button>
+        </form>
+    </div>
+    @endif
+
     <div class="chat-header">
         <div class="header-icon">
             @if(isset($chatbot->settings['branding']['icon_url']))
@@ -205,11 +243,12 @@
         </div>
         <div class="header-info">
             <h6>{{ $chatbot->settings['branding']['display_name'] ?? $chatbot->name }}</h6>
-            <span><span class="online-dot"></span> Online and ready to help</span>
+            <span><span class="online-dot"></span> {{ __('widget.online_status') }}</span>
         </div>
     </div>
 
     <div class="chat-body" id="chatContainer">
+        <!-- Messages will appear here -->
         <div class="bot-msg-group">
             <div class="bot-avatar">
                 @if(isset($chatbot->settings['branding']['icon_url']))
@@ -219,29 +258,79 @@
                 @endif
             </div>
             <div class="message bot">
-                {{ $chatbot->settings['branding']['welcome_message'] ?? 'Hi! How can I help you today?' }}
+                {{ $chatbot->settings['branding']['welcome_message'] ?? __('widget.welcome_default') }}
             </div>
         </div>
     </div>
 
     <div class="typing" id="typingIndicator">
-        <span>Samson is thinking</span>
+        <span>{{ __('widget.is_thinking', ['name' => $chatbot->settings['branding']['display_name'] ?? $chatbot->name]) }}</span>
         <div class="dot"></div><div class="dot"></div><div class="dot"></div>
     </div>
 
     <div class="chat-footer">
         <div class="input-wrapper">
-            <input type="text" class="chat-input" id="userInput" placeholder="Write a message..." autocomplete="off">
+            <input type="text" class="chat-input" id="userInput" placeholder="{{ __('widget.input_placeholder') }}" autocomplete="off">
         </div>
-        <button class="send-btn" id="sendBtn"><i class="bi bi-send-fill"></i></button>
+        <button class="send-btn" id="sendBtn" title="{{ __('widget.send') }}"><i class="bi bi-send-fill"></i></button>
     </div>
-    <div class="branding-lite">Powered by Chatbot AI</div>
+    <div class="branding-lite">{{ __('widget.powered_by') }}</div>
 
     <script>
         const chatContainer = document.getElementById('chatContainer');
         const userInput = document.getElementById('userInput');
         const sendBtn = document.getElementById('sendBtn');
         const typingIndicator = document.getElementById('typingIndicator');
+        const leadFormOverlay = document.getElementById('leadFormOverlay');
+        const leadForm = document.getElementById('leadForm');
+        
+        // Lead Form Logic
+        const chatbotId = '{{ $chatbot->id }}';
+        const isLeadFormEnabled = {{ ($chatbot->settings['lead_form_enabled'] ?? false) ? 'true' : 'false' }};
+        const hasSubmittedLead = localStorage.getItem('chatbot_lead_submitted_' + chatbotId);
+
+        if (isLeadFormEnabled && !hasSubmittedLead) {
+            if (leadFormOverlay) {
+                leadFormOverlay.style.display = 'flex';
+            }
+        }
+
+        if (leadForm) {
+            leadForm.onsubmit = (e) => {
+                e.preventDefault();
+                const btn = document.getElementById('startChatBtn');
+                const originalText = btn.innerText;
+                btn.innerText = 'Saving...';
+                btn.disabled = true;
+
+                const formData = new FormData(leadForm);
+                formData.append('chatbot_id', chatbotId);
+                formData.append('_token', '{{ csrf_token() }}');
+
+                fetch('{{ route("chat.lead") }}', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    localStorage.setItem('chatbot_lead_submitted_' + chatbotId, 'true');
+                    leadFormOverlay.style.display = 'none';
+                })
+                .catch(err => {
+                    alert('Error saving details. Please try again.');
+                    btn.innerText = originalText;
+                    btn.disabled = false;
+                });
+            };
+        }
+
+        const translations = {
+            error_connecting: "{{ __('widget.error_connecting') }}",
+            network_issue: "{{ __('widget.network_issue') }}"
+        };
 
         const addMessage = (text, role) => {
             if (role === 'bot') {
@@ -288,12 +377,12 @@
                 if (data.answer) {
                     addMessage(data.answer, 'bot');
                 } else {
-                    addMessage('I am sorry, I am having trouble connecting right now.', 'bot');
+                    addMessage(translations.error_connecting, 'bot');
                 }
             })
             .catch(() => {
                 typingIndicator.style.display = 'none';
-                addMessage('Network issue. Please check your connection.', 'bot');
+                addMessage(translations.network_issue, 'bot');
             });
         };
 

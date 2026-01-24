@@ -63,6 +63,7 @@ class ChatbotController extends Controller
             'name' => 'nullable|string|max:255',
             'prompt_template' => 'nullable|string',
             'response_mode' => 'nullable|string|in:ai,direct',
+            'language' => 'nullable|string|size:2',
             'branding' => 'nullable|array',
             'icon' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
@@ -74,6 +75,12 @@ class ChatbotController extends Controller
         
         if ($request->has('response_mode')) {
             $settings['response_mode'] = $request->response_mode;
+            // Since this comes from the main settings form, we update the toggle here
+            $settings['lead_form_enabled'] = $request->has('lead_form_enabled');
+        }
+
+        if ($request->has('language')) {
+            $settings['language'] = $request->language;
         }
 
         if ($request->has('branding')) {
