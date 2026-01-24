@@ -1,0 +1,182 @@
+// Auth Pages Styles
+.auth-body {
+    background: #eff3f9;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    /* Add padding for mobile edges */
+}
+
+.auth-container {
+    display: flex;
+    background: white;
+    border-radius: 24px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.04);
+    overflow: hidden;
+    max-width: 1000px;
+    width: 100%;
+    /* Responsive width */
+    min-height: 600px;
+}
+
+.auth-left {
+    flex: 1;
+    padding: 60px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.auth-right {
+    flex: 1;
+    background: linear-gradient(135deg, #6c5dd3 0%, #8f85e3 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+}
+
+// Decorative circles for right side
+.auth-circle-1 {
+    position: absolute;
+    width: 300px;
+    height: 300px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    top: -50px;
+    right: -50px;
+}
+
+.auth-circle-2 {
+    position: absolute;
+    width: 200px;
+    height: 200px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    bottom: -50px;
+    left: -50px;
+}
+
+.auth-header {
+    margin-bottom: 40px;
+}
+
+.auth-logo {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #11142d;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.auth-logo i {
+    color: #6c5dd3;
+}
+
+.auth-subtitle {
+    color: #808191;
+    font-size: 0.95rem;
+}
+
+.auth-form-group {
+    margin-bottom: 25px;
+}
+
+.auth-label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #11142d;
+}
+
+.auth-input {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid #e4e4e4;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    background: #fcfcfc;
+    transition: all 0.2s;
+}
+
+.auth-input:focus {
+    border-color: #6c5dd3;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(108, 93, 211, 0.1);
+    background: white;
+}
+
+.auth-btn {
+    width: 100%;
+    padding: 14px;
+    background: #6c5dd3;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.2s;
+    margin-top: 10px;
+}
+
+.auth-btn:hover {
+    background: #5a4cb1;
+}
+
+.auth-footer {
+    margin-top: 30px;
+    text-align: center;
+    font-size: 0.9rem;
+    color: #808191;
+}
+
+.auth-link {
+    color: #6c5dd3;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.auth-feature-box {
+    text-align: center;
+    color: white;
+    padding: 40px;
+    z-index: 1;
+}
+
+.auth-feature-icon {
+    font-size: 4rem;
+    margin-bottom: 20px;
+    background: rgba(255, 255, 255, 0.2);
+    width: 100px;
+    height: 100px;
+    border-radius: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 30px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .auth-container {
+        flex-direction: column;
+        min-height: auto;
+    }
+
+    .auth-left {
+        padding: 30px;
+    }
+
+    .auth-right {
+        /* On mobile, either hide or show as a header */
+        /* d-none handled by bootstrap class in blade, but just in case */
+        display: none;
+    }
+}
