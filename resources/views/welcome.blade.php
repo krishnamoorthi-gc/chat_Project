@@ -86,7 +86,7 @@
         "name": "Is there a free trial available?",
         "acceptedAnswer": {
           "@@type": "Answer",
-          "text": "Yes! We offer a 15-day risk-free trial on all our plans (Starter, Pro, and Enterprise). No credit card is required to start your trial."
+          "text": "Yes! We offer a 7-day risk-free trial on all our plans (Starter, Pro, and Enterprise). No credit card is required to start your trial."
         }
       }]
     }
@@ -1671,14 +1671,14 @@
         <div class="section-header">
             <span class="section-badge">💰 Flexible Plans</span>
             <h2>Simple, Transparent Pricing</h2>
-            <p>Choose the perfect plan for your business needs. All plans include a 15-day risk-free trial.</p>
+            <p>Choose the perfect plan for your business needs. All plans include a 7-day risk-free trial.</p>
         </div>
 
         <div class="pricing-grid">
             <!-- Starter Plan -->
             <div class="pricing-card">
                 <div class="plan-name">Starter</div>
-                <div class="trial-badge">15 Days Free Trial</div>
+                <div class="trial-badge">7 Days Free Trial</div>
                 <div class="plan-price"><span>$</span>10</div>
                 <p style="color: var(--gray); margin-bottom: 2rem;">Per month, billed monthly</p>
                 
@@ -1697,7 +1697,7 @@
             <div class="pricing-card popular">
                 <div class="popular-badge">Most Popular</div>
                 <div class="plan-name">Pro</div>
-                <div class="trial-badge">15 Days Free Trial</div>
+                <div class="trial-badge">7 Days Free Trial</div>
                 <div class="plan-price"><span>$</span>30</div>
                 <p style="color: rgba(255,255,255,0.6); margin-bottom: 2rem;">Per month, billed monthly</p>
                 
@@ -1716,7 +1716,7 @@
             <!-- Enterprise Plan -->
             <div class="pricing-card">
                 <div class="plan-name">Enterprise</div>
-                <div class="trial-badge">15 Days Free Trial</div>
+                <div class="trial-badge">7 Days Free Trial</div>
                 <div class="plan-price"><span>$</span>99</div>
                 <p style="color: var(--gray); margin-bottom: 2rem;">Per month, billed monthly</p>
                 
