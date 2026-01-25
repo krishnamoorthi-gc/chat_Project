@@ -247,25 +247,21 @@ body {
 }
 
 /* --- Stats Cards --- */
-.stats-row {
-    display: flex;
-    gap: 20px;
-    margin-bottom: 30px;
-}
+/* .stats-row removed, using Bootstrap grid */
 
 .stat-card {
     background: var(--dash-card-bg);
     border-radius: var(--dash-border-radius);
     padding: 25px;
-    flex: 1;
+    height: 100%;
+    /* Ensure equal height in grid */
     display: flex;
     justify-content: space-between;
     align-items: center;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
     position: relative;
     overflow: hidden;
-    min-width: 200px;
-    /* Prevent squishing too much */
+    /* min-width: 200px;  Removed to allow grid to handle sizing */
 }
 
 .stat-info h3 {
@@ -499,12 +495,28 @@ body {
     .main-content {
         margin-left: 0;
         margin-right: 0;
-        padding-top: 70px;
-        /* Space for mobile toggle */
+        padding-top: 100px;
+        /* Space for fixed header (80px) + gap */
+        padding-bottom: 30px;
+    }
+
+    /* Create a White Mobile Header Bar */
+    body::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 80px;
+        background: #ffffff;
+        /* White background */
+        z-index: 999;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+        /* Soft shadow */
     }
 
     .right-sidebar {
-        /* Convert right sidebar to be static at bottom of content or hidden drawer */
+        /* Convert right sidebar to be static at bottom of content */
         position: static;
         width: 100%;
         height: auto;
@@ -513,34 +525,114 @@ body {
         padding: 20px;
     }
 
-    .stats-row {
-        flex-wrap: wrap;
+    /* Redesign Toggle Button Override */
+    .mobile-nav-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: transparent !important;
+        /* Remove white box */
+        box-shadow: none !important;
+        /* Remove shadow */
+        color: var(--dash-text-dark);
+        border-radius: 0;
+        width: 60px;
+        /* Larger touch target */
+        height: 80px;
+        /* Match header height */
+        top: 0;
+        left: 0;
+        font-size: 1.8rem;
+        padding: 0;
+        z-index: 1002;
+        /* Above header */
     }
 
+    .mobile-nav-toggle:active {
+        background: rgba(0, 0, 0, 0.05) !important;
+    }
+
+    /* Fix Top Bar on Mobile */
+    .top-bar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 80px;
+        padding: 0 20px 0 60px;
+        /* Left padding for toggle */
+        margin-bottom: 0;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        z-index: 1001;
+        pointer-events: none;
+        /* Allow clicks to pass through to toggle if overlapping, though padding handles it */
+    }
+
+    .top-bar>* {
+        pointer-events: auto;
+    }
+
+    .page-title {
+        font-size: 1.2rem;
+        margin-left: 10px;
+        /* Slight offset from toggle area if needed */
+    }
+
+    .user-nav {
+        border-left: none !important;
+        padding-left: 0 !important;
+    }
+
+    .search-bar {
+        display: none;
+        /* Ensure hidden on mobile as per blade, but force here just in case */
+    }
+
+    /* .stats-row and .stat-card styles removed as grid handles this */
+    /* Refine stat card for mobile grid (col-6) */
     .stat-card {
-        flex: 1 1 100%;
-        /* Full width on mobile */
+        padding: 15px;
+        flex-direction: column;
+        align-items: flex-start;
+        min-height: 160px;
+        /* Ensure uniform height */
+    }
+
+    .stat-info {
+        width: 100%;
+    }
+
+    .stat-info h3 {
+        font-size: 1.5rem;
+    }
+
+    .stat-info p {
+        font-size: 0.8rem;
+    }
+
+    .stat-circle {
+        width: 50px;
+        height: 50px;
+        margin-top: auto;
+        /* Push to bottom */
+        align-self: flex-end;
+        /* Align to right */
+    }
+
+    .stat-circle svg {
+        width: 100%;
+        height: 100%;
+    }
+
+    .stat-circle div {
+        font-size: 0.6rem !important;
+        /* Overwrite inline style */
     }
 
     .chart-section {
         flex-direction: column;
-    }
-
-    .search-bar {
-        width: 100%;
-        /* Full width search */
-        max-width: none;
-    }
-
-    .top-bar {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 15px;
-    }
-
-    .search-bar {
-        /* ensure it fits in container */
-        width: 100%;
     }
 }
 
