@@ -1,37 +1,42 @@
 // Auth Pages Styles
 .auth-body {
-    background: #eff3f9;
-    min-height: 100vh;
+    background: #f4f7fe;
+    height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 20px;
-    /* Add padding for mobile edges */
+    padding: 0;
+    margin: 0;
+    overflow: hidden;
 }
 
 .auth-container {
     display: flex;
     background: white;
-    border-radius: 24px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.04);
+    border-radius: 30px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.05);
     overflow: hidden;
     max-width: 1000px;
-    width: 100%;
-    /* Responsive width */
-    min-height: 600px;
+    width: 95%;
+    height: 90vh;
+    /* Fixed height to prevent scrolling */
+    min-height: 550px;
 }
 
 .auth-left {
-    flex: 1;
-    padding: 60px;
+    flex: 1.2;
+    padding: 40px 60px;
     display: flex;
     flex-direction: column;
     justify-content: center;
+    overflow-y: auto;
+    /* Allow internal scrolling if content is too large on small screens */
 }
 
 .auth-right {
     flex: 1;
-    background: linear-gradient(135deg, #6c5dd3 0%, #8f85e3 100%);
+    background: #7c69ef;
+    /* Match the purple in the image */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -42,26 +47,26 @@
 // Decorative circles for right side
 .auth-circle-1 {
     position: absolute;
-    width: 300px;
-    height: 300px;
-    background: rgba(255, 255, 255, 0.1);
+    width: 500px;
+    height: 500px;
+    background: rgba(255, 255, 255, 0.05);
     border-radius: 50%;
-    top: -50px;
-    right: -50px;
+    top: -200px;
+    left: -100px;
 }
 
 .auth-circle-2 {
     position: absolute;
-    width: 200px;
-    height: 200px;
-    background: rgba(255, 255, 255, 0.1);
+    width: 300px;
+    height: 300px;
+    background: rgba(255, 255, 255, 0.05);
     border-radius: 50%;
-    bottom: -50px;
-    left: -50px;
+    bottom: -100px;
+    right: -50px;
 }
 
 .auth-header {
-    margin-bottom: 40px;
+    margin-bottom: 25px;
 }
 
 .auth-logo {
@@ -75,7 +80,7 @@
 }
 
 .auth-logo i {
-    color: #6c5dd3;
+    color: #7c69ef;
 }
 
 .auth-subtitle {
@@ -84,7 +89,7 @@
 }
 
 .auth-form-group {
-    margin-bottom: 25px;
+    margin-bottom: 15px;
 }
 
 .auth-label {
@@ -97,37 +102,41 @@
 
 .auth-input {
     width: 100%;
-    padding: 12px 15px;
-    border: 1px solid #e4e4e4;
+    padding: 10px 18px;
+    border: 1px solid #e1e4ed;
     border-radius: 12px;
     font-size: 0.95rem;
-    background: #fcfcfc;
+    background: #f8f9fc;
     transition: all 0.2s;
+    color: #2b3674;
 }
 
 .auth-input:focus {
-    border-color: #6c5dd3;
+    border-color: #7c69ef;
     outline: none;
-    box-shadow: 0 0 0 3px rgba(108, 93, 211, 0.1);
+    box-shadow: 0 0 0 4px rgba(124, 105, 239, 0.1);
     background: white;
 }
 
 .auth-btn {
     width: 100%;
     padding: 14px;
-    background: #6c5dd3;
+    background: #7c69ef;
     color: white;
     border: none;
     border-radius: 12px;
-    font-weight: 600;
+    font-weight: 700;
     font-size: 1rem;
     cursor: pointer;
-    transition: background 0.2s;
+    transition: all 0.2s;
     margin-top: 10px;
+    box-shadow: 0 10px 20px rgba(124, 105, 239, 0.2);
 }
 
 .auth-btn:hover {
-    background: #5a4cb1;
+    background: #6a57e0;
+    transform: translateY(-2px);
+    box-shadow: 0 12px 25px rgba(124, 105, 239, 0.3);
 }
 
 .auth-footer {
@@ -138,9 +147,9 @@
 }
 
 .auth-link {
-    color: #6c5dd3;
+    color: #7c69ef;
     text-decoration: none;
-    font-weight: 600;
+    font-weight: 700;
 }
 
 .auth-feature-box {
@@ -151,16 +160,30 @@
 }
 
 .auth-feature-icon {
-    font-size: 4rem;
-    margin-bottom: 20px;
-    background: rgba(255, 255, 255, 0.2);
-    width: 100px;
-    height: 100px;
-    border-radius: 30px;
+    font-size: 3rem;
+    background: white;
+    color: #7c69ef;
+    width: 90px;
+    height: 90px;
+    border-radius: 25px;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 0 auto 30px;
+    margin: 0 auto 20px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+.auth-feature-box h3 {
+    font-size: 1.8rem;
+    font-weight: 800;
+    margin-bottom: 15px;
+}
+
+.auth-feature-box p {
+    font-size: 1rem;
+    line-height: 1.6;
+    max-width: 250px;
+    margin: 0 auto;
 }
 
 /* Responsive adjustments */
