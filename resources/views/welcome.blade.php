@@ -406,7 +406,7 @@
         .status-dot {
             width: 8px;
             height: 8px;
-            background: #10b981;
+            background: var(--success);
             border-radius: 50%;
             animation: pulse 2s infinite;
         }
@@ -516,7 +516,7 @@
         .section-badge {
             display: inline-block;
             padding: 0.5rem 1rem;
-            background: rgba(99, 102, 241, 0.1);
+            background: rgba(79, 70, 229, 0.1);
             color: var(--primary);
             border-radius: 50px;
             font-weight: 600;
@@ -1078,7 +1078,7 @@
         /* Footer */
         .footer {
             padding: 5rem 2rem 2rem;
-            background: #0a0a1f; /* Deeper dark for footer */
+            background: var(--dark);
             color: white;
         }
 
