@@ -74,6 +74,9 @@
             margin-bottom: 15px;
             color: var(--dash-primary);
         }
+        .smallest {
+            font-size: 0.75rem;
+        }
     </style>
 
     <div class="tab-content" id="chatbotTabsContent">
@@ -367,128 +370,357 @@
 
         <!-- 4. Leads Tab -->
         <div class="tab-pane fade" id="leads" role="tabpanel">
-            <div class="card border-0 shadow-sm p-5 text-center" style="border-radius: 20px;">
-                <i class="bi bi-person-badge display-3 text-light mb-3"></i>
-                <h5 class="fw-bold">No leads captured yet</h5>
-                <p class="text-muted">Turn on Lead Generation in settings to start collecting customer data.</p>
+            <div class="card border-0 shadow-sm" style="border-radius: 20px;">
+                <div class="card-header bg-white border-0 p-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="fw-bold mb-1">Captured Leads</h5>
+                            <p class="text-muted small mb-0">Visitors who interacted with this chatbot</p>
+                        </div>
+                        @if($chatbot->leads->isNotEmpty())
+                            <span class="badge bg-primary-soft text-primary px-3 py-2" style="background: #eef2ff;">
+                                {{ $chatbot->leads->count() }} {{ Str::plural('Lead', $chatbot->leads->count()) }}
+                            </span>
+                        @endif
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    @if($chatbot->leads->isEmpty())
+                        <div class="text-center py-5">
+                            <i class="bi bi-person-badge display-3 text-light mb-3"></i>
+                            <h5 class="fw-bold">No leads captured yet</h5>
+                            <p class="text-muted">
+                                @if(!($chatbot->settings['lead_form_enabled'] ?? false))
+                                    Turn on Lead Generation in <a href="#settings" onclick="document.getElementById('settings-tab').click()" class="text-primary">settings</a> to start collecting customer data.
+                                @else
+                                    Leads will appear here once visitors start chatting with your bot.
+                                @endif
+                            </p>
+                        </div>
+                    @else
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="bg-light">
+                                    <tr>
+                                        <th class="ps-4 border-0">Contact</th>
+                                        <th class="border-0">IP / Location</th>
+                                        <th class="border-0">Visits</th>
+                                        <th class="border-0">Last Interaction</th>
+                                        <th class="border-0">Device</th>
+                                        <th class="pe-4 border-0 text-end">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($chatbot->leads as $lead)
+                                    <tr>
+                                        <td class="ps-4">
+                                            <div class="d-flex align-items-center">
+                                                <div class="rounded-circle bg-primary bg-opacity-10 p-2 me-3 text-primary">
+                                                    <i class="bi bi-person-fill"></i>
+                                                </div>
+                                                <div>
+                                                    <div class="fw-bold">{{ $lead->name ?? 'Guest Visitor' }}</div>
+                                                    <div class="small text-muted">{{ $lead->email ?? 'No email provided' }}</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="fw-bold small">{{ $lead->ip_address }}</div>
+                                            @if($lead->city || $lead->country)
+                                                <div class="text-muted small">
+                                                    {{ $lead->city }}@if($lead->region), {{ $lead->region }}@endif, {{ $lead->country }}
+                                                </div>
+                                            @else
+                                                <div class="text-muted small">Unknown Location</div>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <span class="fw-bold me-2">{{ $lead->visit_count }}</span>
+                                                <div class="progress" style="width: 50px; height: 4px;">
+                                                    <div class="progress-bar bg-success" style="width: {{ min($lead->visit_count * 10, 100) }}%"></div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="small fw-bold">{{ $lead->last_visit_at->format('M d, Y') }}</div>
+                                            <div class="text-muted smallest">{{ $lead->last_visit_at->diffForHumans() }}</div>
+                                        </td>
+                                        <td>
+                                            <span class="small text-muted text-truncate d-inline-block" style="max-width: 150px;" title="{{ $lead->user_agent }}">
+                                                {{ Str::limit($lead->user_agent, 30) }}
+                                            </span>
+                                        </td>
+                                        <td class="pe-4 text-end">
+                                            <div class="dropdown">
+                                                <button class="btn btn-link text-muted p-0" data-bs-toggle="dropdown">
+                                                    <i class="bi bi-three-dots-vertical"></i>
+                                                </button>
+                                                <ul class="dropdown-menu dropdown-menu-end border-0 shadow-sm">
+                                                    <li>
+                                                        <form action="{{ route('leads.destroy', $lead) }}" method="POST" onsubmit="return confirm('Are you sure?')">
+                                                            @csrf
+                                                            @method('DELETE')
+                                                            <button class="dropdown-item text-danger small">
+                                                                <i class="bi bi-trash me-2"></i>Delete Lead
+                                                            </button>
+                                                        </form>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @endif
+                </div>
             </div>
         </div>
 
         <div class="tab-pane fade" id="settings" role="tabpanel">
-            <div class="card border-0 shadow-sm" style="border-radius: 20px;">
-                <div class="card-body p-4">
-                    <form action="{{ route('chatbots.update', $chatbot) }}" method="POST">
-                        @csrf @method('PUT')
-                        <div class="mb-4">
-                            <label class="form-label fw-bold small text-muted text-uppercase">Chatbot Name</label>
-                            <input type="text" class="form-control bg-light border-0" name="name" value="{{ $chatbot->name }}" style="border-radius: 10px;">
+            <form action="{{ route('chatbots.update', $chatbot) }}" method="POST">
+                @csrf @method('PUT')
+                
+                <div class="row g-4">
+                    <!-- Left Column: Identity & Intelligence -->
+                    <div class="col-lg-7">
+                        <!-- 1. Identity Card -->
+                        <div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden">
+                            <div class="card-header bg-white border-0 pt-4 px-4 pb-0">
+                                <div class="d-flex align-items-center">
+                                    <div class="bg-primary bg-opacity-10 p-2 rounded-3 text-primary me-3">
+                                        <i class="bi bi-robot fs-5"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="fw-bold mb-1">Identity & Language</h6>
+                                        <p class="text-muted small mb-0">Basic configuration for your chatbot.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-body p-4">
+                                <div class="row g-3">
+                                    <div class="col-md-7">
+                                        <label class="form-label small fw-bold text-muted text-uppercase">Chatbot Name</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-light border-0"><i class="bi bi-fonts"></i></span>
+                                            <input type="text" class="form-control bg-light border-0 py-2 fw-bold" name="name" value="{{ $chatbot->name }}" placeholder="e.g. Support Bot">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-5">
+                                        <label class="form-label small fw-bold text-muted text-uppercase">Language</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-light border-0"><i class="bi bi-translate"></i></span>
+                                            <select class="form-select bg-light border-0 py-2 cursor-pointer" name="language">
+                                                <option value="en" {{ ($chatbot->settings['language'] ?? 'en') == 'en' ? 'selected' : '' }}>English</option>
+                                                <option value="es" {{ ($chatbot->settings['language'] ?? 'en') == 'es' ? 'selected' : '' }}>Spanish</option>
+                                                <option value="fr" {{ ($chatbot->settings['language'] ?? 'en') == 'fr' ? 'selected' : '' }}>French</option>
+                                                <option value="de" {{ ($chatbot->settings['language'] ?? 'en') == 'de' ? 'selected' : '' }}>German</option>
+                                                <option value="it" {{ ($chatbot->settings['language'] ?? 'en') == 'it' ? 'selected' : '' }}>Italian</option>
+                                                <option value="pt" {{ ($chatbot->settings['language'] ?? 'en') == 'pt' ? 'selected' : '' }}>Portuguese</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
-                        <div class="mb-4">
-                            <label class="form-label fw-bold small text-muted text-uppercase">Chatbot Language</label>
-                            <select class="form-select bg-light border-0" name="language" style="border-radius: 10px;">
-                                <option value="en" {{ ($chatbot->settings['language'] ?? 'en') == 'en' ? 'selected' : '' }}>English</option>
-                                <option value="es" {{ ($chatbot->settings['language'] ?? 'en') == 'es' ? 'selected' : '' }}>Spanish (Español)</option>
-                                <option value="fr" {{ ($chatbot->settings['language'] ?? 'en') == 'fr' ? 'selected' : '' }}>French (Français)</option>
-                                <option value="de" {{ ($chatbot->settings['language'] ?? 'en') == 'de' ? 'selected' : '' }}>German (Deutsch)</option>
-                                <option value="it" {{ ($chatbot->settings['language'] ?? 'en') == 'it' ? 'selected' : '' }}>Italian (Italiano)</option>
-                                <option value="pt" {{ ($chatbot->settings['language'] ?? 'en') == 'pt' ? 'selected' : '' }}>Portuguese (Português)</option>
-                            </select>
+                        <!-- 2. System Intelligence Card -->
+                        <div class="card border-0 shadow-sm rounded-4 mb-4">
+                            <div class="card-header bg-white border-0 pt-4 px-4 pb-0">
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <div class="d-flex align-items-center">
+                                        <div class="bg-info bg-opacity-10 p-2 rounded-3 text-info me-3">
+                                            <i class="bi bi-cpu fs-5"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="fw-bold mb-1">System Instructions</h6>
+                                            <p class="text-muted small mb-0">Define persona and constraints.</p>
+                                        </div>
+                                    </div>
+                                    <span class="badge bg-light text-muted border">Advanced</span>
+                                </div>
+                            </div>
+                            <div class="card-body p-4">
+                                <div class="bg-light p-3 rounded-4 border-0">
+                                    <textarea class="form-control bg-transparent border-0" rows="10" name="prompt_template" placeholder="You are a helpful AI assistant. Answer concisely..." style="resize: none;">{{ $chatbot->prompt_template }}</textarea>
+                                </div>
+                                <div class="d-flex gap-2 mt-3 overflow-x-auto pb-2">
+                                    <small class="text-muted fw-bold text-uppercase flex-shrink-0" style="font-size: 0.65rem; padding-top: 4px;">Quick Templates:</small>
+                                    <button type="button" class="badge bg-white text-dark border shadow-sm fw-normal py-2 px-3" onclick="setPrompt('Support')">Customer Support</button>
+                                    <button type="button" class="badge bg-white text-dark border shadow-sm fw-normal py-2 px-3" onclick="setPrompt('Sales')">Sales Agent</button>
+                                    <button type="button" class="badge bg-white text-dark border shadow-sm fw-normal py-2 px-3" onclick="setPrompt('Teacher')">Tutor/Teacher</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Behavior & Leads -->
+                    <div class="col-lg-5">
+                        <!-- Save Button (Sticky/Prominent) -->
+                        <div class="card border-0 shadow-sm rounded-4 mb-4 bg-primary text-white overflow-hidden">
+                            <div class="card-body p-4 d-flex justify-content-between align-items-center position-relative">
+                                <div class="position-absolute top-0 start-0 w-100 h-100 bg-gradient-primary opacity-50"></div>
+                                <div class="position-relative z-1">
+                                    <h6 class="fw-bold mb-1">Unsaved Changes?</h6>
+                                    <p class="small text-white-50 mb-0">Don't forget to update your bot.</p>
+                                </div>
+                                <button type="submit" class="btn btn-light text-primary fw-bold px-4 py-2 rounded-pill shadow-sm position-relative z-1">
+                                    <i class="bi bi-check-lg me-1"></i> Save Settings
+                                </button>
+                            </div>
                         </div>
 
+                        <!-- 3. Lead Generation -->
+                        <div class="card border-0 shadow-sm rounded-4 mb-4">
+                             <div class="card-body p-4">
+                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                    <div class="d-flex align-items-center">
+                                        <div class="bg-success bg-opacity-10 p-2 rounded-3 text-success me-3">
+                                            <i class="bi bi-person-lines-fill fs-5"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="fw-bold mb-0">Lead Collection</h6>
+                                            <p class="text-muted small mb-0">Collect user details before chat</p>
+                                        </div>
+                                    </div>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" role="switch" id="enableLeadForm" name="lead_form_enabled" value="1" {{ ($chatbot->settings['lead_form_enabled'] ?? false) ? 'checked' : '' }} style="transform: scale(1.3);">
+                                    </div>
+                                </div>
+                                <div class="bg-light rounded-3 p-3 border-start border-4 border-success">
+                                    <div class="d-flex gap-2 mb-2">
+                                        <span class="badge bg-white text-dark border">Name</span>
+                                        <span class="badge bg-white text-dark border">Email</span>
+                                    </div>
+                                    <div class="d-flex gap-2">
+                                        <span class="badge bg-white text-dark border">City</span>
+                                        <span class="badge bg-white text-dark border">Country</span>
+                                    </div>
+                                    <div class="mt-2 text-muted" style="font-size: 0.7rem;">
+                                        <i class="bi bi-info-circle me-1"></i> Users must fill this form to proceed.
+                                    </div>
+                                </div>
+                             </div>
+                        </div>
 
-                        <div class="mb-4">
-                            <div class="form-check form-switch p-0 d-flex justify-content-between align-items-center bg-light rounded-4 p-3">
+                        <!-- 4. Response Logic -->
+                        <div class="card border-0 shadow-sm rounded-4 mb-4">
+                            <div class="card-header bg-white border-0 pt-4 px-4 pb-0">
+                                <h6 class="fw-bold mb-0"><i class="bi bi-chat-dots me-2 text-secondary"></i>Response Style</h6>
+                            </div>
+                            <div class="card-body p-4">
+                                <div class="d-flex flex-column gap-3">
+                                    <label class="d-flex align-items-start p-3 border rounded-4 cursor-pointer hover-shadow transition-all {{ ($chatbot->settings['response_mode'] ?? 'ai') == 'ai' ? 'bg-primary-soft border-primary' : 'bg-white' }}" onclick="selectRadioCard(this)">
+                                        <div class="me-3 mt-1">
+                                            <input type="radio" name="response_mode" value="ai" class="form-check-input" {{ ($chatbot->settings['response_mode'] ?? 'ai') == 'ai' ? 'checked' : '' }}>
+                                        </div>
+                                        <div>
+                                            <span class="fw-bold d-block text-dark small mb-1">✨ AI Summarization</span>
+                                            <span class="text-muted d-block" style="font-size: 0.75rem; line-height: 1.4;">Uses GPT to generate natural, human-like answers based on your data. Best for support.</span>
+                                        </div>
+                                    </label>
+                                    
+                                    <label class="d-flex align-items-start p-3 border rounded-4 cursor-pointer hover-shadow transition-all {{ ($chatbot->settings['response_mode'] ?? 'ai') == 'direct' ? 'bg-primary-soft border-primary' : 'bg-white' }}" onclick="selectRadioCard(this)">
+                                        <div class="me-3 mt-1">
+                                            <input type="radio" name="response_mode" value="direct" class="form-check-input" {{ ($chatbot->settings['response_mode'] ?? 'ai') == 'direct' ? 'checked' : '' }}>
+                                        </div>
+                                        <div>
+                                            <span class="fw-bold d-block text-dark small mb-1">📄 Strict Matching</span>
+                                            <span class="text-muted d-block" style="font-size: 0.75rem; line-height: 1.4;">Returns the exact text chunk from your documents. Best for legal or compliance.</span>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 5. Suggested Questions -->
+                        <div class="card border-0 shadow-sm rounded-4 mb-4">
+                             <div class="card-body p-4">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h6 class="fw-bold mb-0 text-truncate"><i class="bi bi-signpost-split me-2 text-warning"></i>Starters</h6>
+                                    <div class="form-check form-switch">
+                                        <label class="form-check-label small me-2" for="showSuggestedQuestions">Show</label>
+                                        <input class="form-check-input" type="checkbox" role="switch" id="showSuggestedQuestions" name="show_suggested_questions" value="1" {{ ($chatbot->settings['show_suggested_questions'] ?? false) ? 'checked' : '' }}>
+                                    </div>
+                                </div>
+                                <div class="p-3 bg-light rounded-4">
+                                    <div id="suggested-questions-container">
+                                        @php $suggestions = $chatbot->settings['suggested_questions'] ?? []; @endphp
+                                        @foreach($suggestions as $index => $question)
+                                            <div class="input-group mb-2">
+                                                <input type="text" class="form-control border-0 bg-white shadow-sm" name="suggested_questions[]" value="{{ $question }}" placeholder="e.g. Pricing?" style="border-radius: 8px 0 0 8px; font-size: 0.85rem;">
+                                                <button class="btn btn-white bg-white text-danger border-0 shadow-sm" type="button" onclick="this.closest('.input-group').remove()" style="border-radius: 0 8px 8px 0;"><i class="bi bi-trash"></i></button>
+                                            </div>
+                                        @endforeach
+                                        @if(count($suggestions) == 0)
+                                            <div class="input-group mb-2">
+                                                <input type="text" class="form-control border-0 bg-white shadow-sm" name="suggested_questions[]" placeholder="e.g. How does this work?" style="border-radius: 8px 0 0 8px; font-size: 0.85rem;">
+                                            </div>
+                                        @endif
+                                    </div>
+                                    <button type="button" class="btn btn-sm btn-link text-decoration-none fw-bold mt-1 w-100 text-center text-primary" onclick="addSuggestedQuestion()">
+                                        <i class="bi bi-plus-circle me-1"></i> Add Question
+                                    </button>
+                                </div>
+                             </div>
+                        </div>
+
+                        <!-- 6. Danger Zone -->
+                        <div class="card border border-danger border-opacity-10 shadow-none rounded-4 mb-4" style="background: #fff5f5;">
+                            <div class="card-body p-4 d-flex align-items-center justify-content-between">
                                 <div>
-                                    <label class="form-check-label fw-bold small text-muted text-uppercase mb-0" for="enableLeadForm">Collect User Lead Data</label>
-                                    <p class="text-muted small mb-0 mt-1" style="font-size: 0.75rem;">Ask for Name, Email, City & Country before starting chat.</p>
+                                    <h6 class="fw-bold text-danger mb-1">Delete Chatbot</h6>
+                                    <p class="small text-muted mb-0">Permanently remove details.</p>
                                 </div>
-                                <input class="form-check-input ms-0" type="checkbox" role="switch" id="enableLeadForm" name="lead_form_enabled" value="1" {{ ($chatbot->settings['lead_form_enabled'] ?? false) ? 'checked' : '' }} style="width: 2.5em; height: 1.25em;">
+                                <button type="button" class="btn btn-white text-danger border border-danger border-opacity-25 bg-white shadow-sm fw-bold btn-sm px-3" data-bs-toggle="modal" data-bs-target="#deleteChatbotModal">Delete</button>
                             </div>
                         </div>
 
-                        <div class="mb-4">
-                            <label class="form-label fw-bold small text-muted text-uppercase">Response Logic</label>
-                            <select class="form-select bg-light border-0" name="response_mode" style="border-radius: 10px;">
-                                <option value="ai" {{ ($chatbot->settings['response_mode'] ?? 'ai') == 'ai' ? 'selected' : '' }}>AI Summary (Short & Sweet - Recommended)</option>
-                                <option value="direct" {{ ($chatbot->settings['response_mode'] ?? 'ai') == 'direct' ? 'selected' : '' }}>Raw Dataset (Exact copy of your data)</option>
-                            </select>
-                            <div class="form-text small text-muted mt-2">
-                                <i class="bi bi-info-circle me-1"></i> 
-                                <strong>AI Summary:</strong> Rephrases your data into a short, sweet answer (Best for general questions).<br>
-                                <strong>Raw Dataset:</strong> Returns your training data exactly as it is (Best for legal docs or strict Q&A).
-                            </div>
-                        </div>
-
-                        <!-- Suggested Questions Section -->
-                        <div class="mb-4">
-                             <div class="d-flex justify-content-between align-items-center mb-2">
-                                <label class="form-label fw-bold small text-muted text-uppercase mb-0">Initial Suggested Questions</label>
-                                <div class="form-check form-switch">
-                                    <input class="form-check-input" type="checkbox" role="switch" id="showSuggestedQuestions" name="show_suggested_questions" value="1" {{ ($chatbot->settings['show_suggested_questions'] ?? false) ? 'checked' : '' }}>
-                                    <label class="form-check-label small" for="showSuggestedQuestions">Enable</label>
-                                </div>
-                            </div>
-                            <div class="p-3 bg-light rounded-4">
-                                <p class="text-muted small mb-3">Add up to 4 questions users can click to start the chat.</p>
-                                <div id="suggested-questions-container">
-                                    @php $suggestions = $chatbot->settings['suggested_questions'] ?? []; @endphp
-                                    @foreach($suggestions as $index => $question)
-                                        <div class="input-group mb-2">
-                                            <span class="input-group-text border-0 bg-white"><i class="bi bi-chat-right-text"></i></span>
-                                            <input type="text" class="form-control border-0" name="suggested_questions[]" value="{{ $question }}" placeholder="e.g. What is your pricing?">
-                                            <button class="btn btn-white bg-white text-danger border-0" type="button" onclick="this.closest('.input-group').remove()"><i class="bi bi-trash"></i></button>
-                                        </div>
-                                    @endforeach
-                                    @if(count($suggestions) == 0)
-                                        <div class="input-group mb-2">
-                                            <span class="input-group-text border-0 bg-white"><i class="bi bi-chat-right-text"></i></span>
-                                            <input type="text" class="form-control border-0" name="suggested_questions[]" placeholder="e.g. What is your pricing?">
-                                        </div>
-                                    @endif
-                                </div>
-                                <button type="button" class="btn btn-sm btn-link text-decoration-none fw-bold mt-2" onclick="addSuggestedQuestion()"><i class="bi bi-plus-circle me-1"></i> Add Another Question</button>
-                            </div>
-                        </div>
-
-                        <script>
-                            function addSuggestedQuestion() {
-                                const container = document.getElementById('suggested-questions-container');
-                                if (container.children.length >= 4) {
-                                    alert('Max 4 suggested questions allowed.');
-                                    return;
-                                }
-                                const div = document.createElement('div');
-                                div.className = 'input-group mb-2';
-                                div.innerHTML = `
-                                    <span class="input-group-text border-0 bg-white"><i class="bi bi-chat-right-text"></i></span>
-                                    <input type="text" class="form-control border-0" name="suggested_questions[]" placeholder="e.g. How do I get started?">
-                                    <button class="btn btn-white bg-white text-danger border-0" type="button" onclick="this.closest('.input-group').remove()"><i class="bi bi-trash"></i></button>
-                                `;
-                                container.appendChild(div);
-                            }
-                        </script>
-
-                        <div class="mb-4">
-                            <label class="form-label fw-bold small text-muted text-uppercase">System Instructions (Prompt)</label>
-                            <textarea class="form-control bg-light border-0" rows="6" name="prompt_template" style="border-radius: 10px;" placeholder="e.g. You are a professional accountant. Give concise answers...">{{ $chatbot->prompt_template }}</textarea>
-                            <div class="form-text small text-muted mt-1">Leave blank to use the default "Short & Sweet" logic.</div>
-                        </div>
-                        
-                        <div class="d-flex justify-content-between align-items-center mt-5 p-3 bg-light rounded-4">
-                            <div>
-                                <h6 class="fw-bold mb-0">Delete Chatbot</h6>
-                                <p class="text-muted small mb-0">This will remove all training data and settings.</p>
-                            </div>
-                            <button type="button" class="btn btn-outline-danger btn-sm px-4 fw-bold" data-bs-toggle="modal" data-bs-target="#deleteChatbotModal">Delete permanently</button>
-                        </div>
-
-                        <div class="mt-4">
-                            <button class="btn btn-primary px-5 py-2 fw-bold" style="border-radius: 12px; background: var(--dash-primary); border:none;">Save All Settings</button>
-                        </div>
-                    </form>
+                    </div>
                 </div>
-            </div>
+            </form>
+
+            <script>
+                function addSuggestedQuestion() {
+                    const container = document.getElementById('suggested-questions-container');
+                    if (container.children.length >= 4) {
+                        alert('Max 4 suggested questions allowed.');
+                        return;
+                    }
+                    const div = document.createElement('div');
+                    div.className = 'input-group mb-2';
+                    div.innerHTML = `
+                        <input type="text" class="form-control border-0 bg-white shadow-sm" name="suggested_questions[]" placeholder="New Question" style="border-radius: 8px 0 0 8px; font-size: 0.85rem;">
+                        <button class="btn btn-white bg-white text-danger border-0 shadow-sm" type="button" onclick="this.closest('.input-group').remove()" style="border-radius: 0 8px 8px 0;"><i class="bi bi-trash"></i></button>
+                    `;
+                    container.appendChild(div);
+                }
+
+                function setPrompt(type) {
+                    const ta = document.querySelector('textarea[name="prompt_template"]');
+                    if(type === 'Support') ta.value = "You are a friendly Customer Support Agent. Answer questions clearly and concisely based on the context provided. If you don't know the answer, politely ask the user to contact support@example.com.";
+                    if(type === 'Sales') ta.value = "You are a persuasive Sales Representative. Highlight the benefits of our products. Be energetic and helpful. Try to close the deal by suggesting they sign up.";
+                    if(type === 'Teacher') ta.value = "You are a patient Tutor. Explain concepts in simple terms. Use analogies where possible. Encourage specific questions.";
+                }
+                
+                function selectRadioCard(element) {
+                    // Visual selection logic if needed, though radio default handling combined with label click works
+                    document.querySelectorAll('input[name="response_mode"]').forEach(el => {
+                         el.closest('label').classList.remove('bg-primary-soft', 'border-primary');
+                         el.closest('label').classList.add('bg-white');
+                    });
+                    element.classList.remove('bg-white');
+                    element.classList.add('bg-primary-soft', 'border-primary');
+                }
+            </script>
+            
+            <style>
+                .bg-primary-soft { background-color: #eef2ff; }
+                .hover-shadow:hover { box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+                .transition-all { transition: all 0.2s ease; }
+            </style>
         </div>
     </div>
 </div>

@@ -175,6 +175,58 @@ body {
     margin-bottom: 15px;
 }
 
+/* Sidebar Mini Styles */
+.sidebar.mini {
+    width: var(--dash-sidebar-mini-width, 80px);
+    padding: 20px 10px;
+}
+
+.sidebar.mini .sidebar-header span,
+.sidebar.mini .nav-item-custom span,
+.sidebar.mini .upgrade-promo,
+.sidebar.mini .sidebar-nav .nav-section-title {
+    display: none;
+}
+
+.sidebar.mini .nav-item-custom {
+    justify-content: center;
+    padding: 12px;
+}
+
+.sidebar.mini .nav-item-custom i {
+    margin-right: 0;
+    font-size: 1.4rem;
+}
+
+.sidebar.mini .sidebar-header {
+    flex-direction: column;
+    justify-content: center;
+    gap: 15px;
+}
+
+.dashboard-wrapper.sidebar-collapsed .main-content {
+    margin-left: var(--dash-sidebar-mini-width, 80px);
+}
+
+.sidebar-toggle-btn {
+    background: none;
+    border: none;
+    color: var(--dash-text-gray);
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    transition: all 0.2s;
+}
+
+.sidebar-toggle-btn:hover {
+    background: #f0f0f0;
+    color: var(--dash-primary);
+}
+
 .upgrade-promo .btn-upgrade {
     background: white;
     color: var(--dash-primary);

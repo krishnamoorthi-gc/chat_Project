@@ -26,4 +26,9 @@ class Chatbot extends Model
     {
         return $this->hasMany(KnowledgeSource::class);
     }
+
+    public function leads()
+    {
+        return $this->hasMany(Lead::class)->orderBy('last_visit_at', 'desc');
+    }
 }

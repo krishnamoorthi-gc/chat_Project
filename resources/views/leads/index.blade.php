@@ -19,8 +19,8 @@
                 <table class="table table-hover align-middle mb-0">
                     <thead class="bg-light">
                         <tr>
-                            <th class="ps-4 border-0">IP Address</th>
-                            <th class="border-0">Location</th>
+                            <th class="ps-4 border-0">Contact</th>
+                            <th class="border-0">IP / Location</th>
                             <th class="border-0">Chatbot</th>
                             <th class="border-0">Visits</th>
                             <th class="border-0">Last Interaction</th>
@@ -34,20 +34,22 @@
                             <td class="ps-4">
                                 <div class="d-flex align-items-center">
                                     <div class="rounded-circle bg-primary bg-opacity-10 p-2 me-3 text-primary">
-                                        <i class="bi bi-geo-alt-fill"></i>
+                                        <i class="bi bi-person-fill"></i>
                                     </div>
                                     <div>
-                                        <div class="fw-bold">{{ $lead->ip_address }}</div>
+                                        <div class="fw-bold">{{ $lead->name ?? 'Guest Visitor' }}</div>
+                                        <div class="small text-muted">{{ $lead->email ?? 'No email provided' }}</div>
                                     </div>
                                 </div>
                             </td>
                             <td>
+                                <div class="fw-bold small">{{ $lead->ip_address }}</div>
                                 @if($lead->city || $lead->country)
-                                    <span class="badge bg-light text-dark fw-normal">
+                                    <div class="text-muted small">
                                         {{ $lead->city }}@if($lead->region), {{ $lead->region }}@endif, {{ $lead->country }}
-                                    </span>
+                                    </div>
                                 @else
-                                    <span class="text-muted small">Unknown</span>
+                                    <div class="text-muted small">Unknown Location</div>
                                 @endif
                             </td>
                             <td>

@@ -15,56 +15,8 @@
     <!-- Scripts -->
     @vite(['resources/sass/app.scss', 'resources/js/app.js'])
 
-    <style>
-        /* Sidebar Mini Styles */
-        .sidebar.mini {
-            width: 80px;
-            padding: 20px 10px;
-        }
-        .sidebar.mini .sidebar-header span,
-        .sidebar.mini .nav-item-custom span,
-        .sidebar.mini .upgrade-promo,
-        .sidebar.mini .sidebar-nav .nav-section-title {
-            display: none;
-        }
-        .sidebar.mini .nav-item-custom {
-            justify-content: center;
-            padding: 12px;
-        }
-        .sidebar.mini .nav-item-custom i {
-            margin-right: 0;
-            font-size: 1.4rem;
-        }
-        .sidebar.mini .sidebar-header {
-            justify-content: center;
-        }
-        .dashboard-wrapper.sidebar-collapsed .main-content {
-            margin-left: 80px;
-        }
-        
-        /* Transition */
-        .sidebar, .main-content {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .sidebar-toggle-btn {
-            background: none;
-            border: none;
-            color: var(--dash-text-gray);
-            font-size: 1.5rem;
-            cursor: pointer;
-            padding: 5px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 8px;
-            transition: all 0.2s;
-        }
-        .sidebar-toggle-btn:hover {
-            background: #f0f0f0;
-            color: var(--dash-primary);
-        }
-    </style>
+    <!-- Scripts -->
+    @vite(['resources/sass/app.scss', 'resources/js/app.js'])
 </head>
 <body>
     <div id="app">
@@ -78,12 +30,12 @@
             <!-- Sidebar -->
             <div class="sidebar" id="sidebar">
                 <div class="sidebar-header d-flex align-items-center justify-content-between">
-                    <div class="d-flex align-items-center">
+                    <div class="logo-wrapper d-flex align-items-center">
                         <i class="bi bi-robot"></i>
                         <span class="ms-2 fw-bold">ChatApp</span>
                     </div>
                     <button class="sidebar-toggle-btn d-none d-lg-flex" onclick="toggleSidebar()">
-                        <i class="bi bi-text-indent-left" id="toggleIcon"></i>
+                        <i class="bi bi-list" id="toggleIcon"></i>
                     </button>
                 </div>
                 
@@ -169,16 +121,16 @@
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             const wrapper = document.getElementById('dashboardWrapper');
-            const icon = document.getElementById('toggleIcon');
+            // const icon = document.getElementById('toggleIcon'); // No longer toggling icon class
             
             sidebar.classList.toggle('mini');
             wrapper.classList.toggle('sidebar-collapsed');
             
             if (sidebar.classList.contains('mini')) {
-                icon.classList.replace('bi-text-indent-left', 'bi-text-indent-right');
+                // icon.classList.replace('bi-text-indent-left', 'bi-text-indent-right');
                 localStorage.setItem('sidebar-mode', 'mini');
             } else {
-                icon.classList.replace('bi-text-indent-right', 'bi-text-indent-left');
+                // icon.classList.replace('bi-text-indent-right', 'bi-text-indent-left');
                 localStorage.setItem('sidebar-mode', 'full');
             }
         }
