@@ -301,10 +301,17 @@
 
     <div class="chat-footer">
         <div class="input-wrapper">
-            <label for="widgetFileInput" style="cursor:pointer; margin-right:8px; color:var(--text-muted); display:flex; align-items:center;">
-                <i class="bi bi-paperclip fs-5"></i>
-                <input type="file" id="widgetFileInput" class="d-none">
-            </label>
+             <div style="margin-right:8px; display: flex; align-items: center;">
+                <label for="widgetFileInput" id="fileLabel" style="cursor:pointer; color:var(--text-muted); display:flex; align-items:center; transition: color 0.2s;" title="Attach file">
+                    <i class="bi bi-paperclip fs-5"></i>
+                </label>
+                <input type="file" id="widgetFileInput" style="display:none;" onchange="handleFileSelect(this)">
+                <div id="filePreview" style="display:none; align-items:center; margin-left:8px; background:#e2e8f0; padding:4px 8px; border-radius:8px; font-size:0.75rem;">
+                    <span id="fileName" style="max-width:80px; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; display:inline-block;"></span>
+                    <i class="bi bi-x" style="cursor:pointer; margin-left:4px;" onclick="clearFile()"></i>
+                </div>
+            </div>
+
             <input type="text" class="chat-input" id="userInput" placeholder="{{ __('widget.input_placeholder') }}" autocomplete="off">
         </div>
         <button class="send-btn" id="sendBtn" title="{{ __('widget.send') }}"><i class="bi bi-send-fill"></i></button>
@@ -423,6 +430,29 @@
             userInput.value = question;
             sendMessage();
         }
+        
+        // File Handling
+        function handleFileSelect(input) {
+            const fileName = input.files[0]?.name;
+            const preview = document.getElementById('filePreview');
+            const nameSpan = document.getElementById('fileName');
+            const label = document.getElementById('fileLabel');
+
+            if (fileName) {
+                nameSpan.innerText = fileName;
+                preview.style.display = 'flex';
+                label.style.color = 'var(--primary-color)';
+            } else {
+                clearFile();
+            }
+        }
+
+        function clearFile() {
+             const input = document.getElementById('widgetFileInput');
+             input.value = '';
+             document.getElementById('filePreview').style.display = 'none';
+             document.getElementById('fileLabel').style.color = 'var(--text-muted)';
+        }
 
         const translations = {
             error_connecting: "{{ __('widget.error_connecting') }}",
@@ -443,10 +473,20 @@
 
             let fileHtml = '';
             if (file_path) {
-                if (file_type && ['jpg', 'jpeg', 'png', 'gif'].includes(file_type.toLowerCase())) {
-                    fileHtml = `<div style="margin-bottom:8px;"><img src="${file_path}" style="max-width:100%; border-radius:8px;"></div>`;
+                // If it's a local file object (preview)
+                if (file_path instanceof File) {
+                     const url = URL.createObjectURL(file_path);
+                     if (file_path.type.startsWith('image/')) {
+                         fileHtml = `<div style="margin-bottom:8px;"><img src="${url}" style="max-width:100%; border-radius:8px;"></div>`;
+                     } else {
+                         fileHtml = `<div style="margin-bottom:8px;"><span style="font-size:0.85rem;">📎 ${file_path.name}</span></div>`;
+                     }
                 } else {
-                    fileHtml = `<div style="margin-bottom:8px;"><a href="${file_path}" target="_blank" style="color:inherit; text-decoration:underline;">📎 Attachment</a></div>`;
+                     if (file_type && ['jpg', 'jpeg', 'png', 'gif'].includes(file_type.toLowerCase())) {
+                        fileHtml = `<div style="margin-bottom:8px;"><img src="${file_path}" style="max-width:100%; border-radius:8px;"></div>`;
+                    } else {
+                        fileHtml = `<div style="margin-bottom:8px;"><a href="${file_path}" target="_blank" style="color:inherit; text-decoration:underline;">📎 Attachment</a></div>`;
+                    }
                 }
             }
 
@@ -483,15 +523,16 @@
             if (!message && !file) return;
 
             // Simplified preview for user
-            addMessage(message, 'user');
+            addMessage({ message: message, file_path: file }, 'user');
             
             const formData = new FormData();
             formData.append('chatbot_id', '{{ $chatbot->id }}');
-            formData.append('message', message);
+            if (message) formData.append('message', message);
             if (file) formData.append('file', file);
 
             userInput.value = '';
-            fileInput.value = '';
+            clearFile(); // Clear file input after sending
+            
             typingIndicator.style.display = 'flex';
             chatContainer.scrollTop = chatContainer.scrollHeight;
 

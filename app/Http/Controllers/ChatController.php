@@ -13,8 +13,13 @@ class ChatController extends Controller
     ) {
         $request->validate([
             'chatbot_id' => 'required|exists:chatbots,id',
-            'message' => 'required|string',
+            'message' => 'nullable|string',
+            'file' => 'nullable|file|max:10240', // Max 10MB
         ]);
+
+        if (!$request->message && !$request->hasFile('file')) {
+            return response()->json(['error' => 'Message or file is required.'], 422);
+        }
 
         $chatbot = \App\Models\Chatbot::findOrFail($request->chatbot_id);
         
@@ -28,12 +33,23 @@ class ChatController extends Controller
         );
 
         $userMessage = $request->message;
+        $filePath = null;
+        $fileType = null;
+
+        if ($request->hasFile('file')) {
+            $file = $request->file('file');
+            $path = $file->store('chat_uploads/' . $conversation->id, 'public');
+            $filePath = '/storage/' . $path;
+            $fileType = $file->getClientOriginalExtension();
+        }
 
         // Save User Message
         \App\Models\Message::create([
             'conversation_id' => $conversation->id,
             'sender' => 'user',
             'message' => $userMessage,
+            'file_path' => $filePath,
+            'file_type' => $fileType,
         ]);
         
         $conversation->touch('last_message_at');
