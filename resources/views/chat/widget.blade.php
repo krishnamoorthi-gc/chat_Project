@@ -335,6 +335,10 @@
         const chatbotId = '{{ $chatbot->id }}';
         const isLeadFormEnabled = {{ ($chatbot->settings['lead_form_enabled'] ?? false) ? 'true' : 'false' }};
         const hasSubmittedLead = localStorage.getItem('chatbot_lead_submitted_' + chatbotId);
+        
+        // Persistence Constants
+        const STORAGE_KEY = 'chat_history_' + chatbotId;
+        const STORAGE_TTL = 3600 * 1000; // 1 Hour
 
         if (isLeadFormEnabled && !hasSubmittedLead) {
             if (leadFormOverlay) {
@@ -388,6 +392,7 @@
 
         function refreshChat() {
             if(confirm('Start a new conversation?')) {
+                localStorage.removeItem(STORAGE_KEY);
                 location.reload();
             }
         }
@@ -463,6 +468,51 @@
 
         let lastMessageId = 0;
 
+        // --- Persistence Logic ---
+        function saveState() {
+            try {
+                const state = {
+                    html: chatContainer.innerHTML,
+                    lastId: lastMessageId,
+                    timestamp: Date.now()
+                };
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+            } catch (e) {
+                console.error("Failed to save chat state", e);
+            }
+        }
+
+        function restoreState() {
+            try {
+                const stored = localStorage.getItem(STORAGE_KEY);
+                if (stored) {
+                    const state = JSON.parse(stored);
+                    const now = Date.now();
+                    
+                    if (now - state.timestamp < STORAGE_TTL) {
+                        chatContainer.innerHTML = state.html;
+                        lastMessageId = state.lastId || 0;
+                        
+                        // Recalculate lastMessageId from DOM to be safe
+                        const messagesWithId = document.querySelectorAll('.message[data-id]');
+                        if (messagesWithId.length > 0) {
+                            const lastMsg = messagesWithId[messagesWithId.length - 1];
+                            const domId = parseInt(lastMsg.dataset.id);
+                            if (domId > lastMessageId) lastMessageId = domId;
+                        }
+                        
+                        chatContainer.scrollTop = chatContainer.scrollHeight;
+                        return true;
+                    } else {
+                        localStorage.removeItem(STORAGE_KEY);
+                    }
+                }
+            } catch (e) {
+                console.error("Failed to restore chat state", e);
+            }
+            return false;
+        }
+
         const addMessage = (msg, role) => {
             const text = typeof msg === 'string' ? msg : msg.message;
             const id = (typeof msg === 'object' && msg.id) ? msg.id : null;
@@ -515,6 +565,7 @@
                 chatContainer.appendChild(div);
             }
             chatContainer.scrollTop = chatContainer.scrollHeight;
+            saveState(); // Save after valid update
         };
 
         const sendMessage = () => {
@@ -552,6 +603,7 @@
                     addMessage({ message: data.answer, id: data.message_id, sender: 'bot' }, 'bot');
                     if (data.message_id) {
                         lastMessageId = data.message_id;
+                        saveState(); // Update ID in state
                     }
                 } else if (data.status === 'waiting_for_agent') {
                     // Do nothing, waiting for pollution to pick up admin reply
@@ -562,6 +614,12 @@
                 addMessage(translations.network_issue, 'bot');
             });
         };
+
+        // Initialize state on load
+        if (!restoreState()) {
+             // If no state restored, we might want to ensure the welcome message is there?
+             // It's already in the HTML by default, so we're good.
+        }
 
         // Polling for updates (for Live Support)
         setInterval(async () => {
@@ -578,14 +636,12 @@
                         }
                         lastMessageId = msg.id;
                     });
+                    saveState(); // Save final state after poll batch
                 }
             } catch (error) {
                 // Silent fail for polling
             }
         }, 4000);
-
-        // Initial lastMessageId setup if needed (though it starts at 0)
-        // We could fetch history here too if we wanted.
 
         sendBtn.onclick = sendMessage;
         userInput.onkeypress = (e) => { if (e.key === 'Enter') sendMessage(); };
