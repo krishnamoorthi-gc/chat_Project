@@ -29,6 +29,13 @@ Route::middleware('auth')->group(function () {
     Route::get('/help', function() {
         return view('help.index');
     })->name('help');
+
+    // Conversations
+    Route::get('/conversations', [App\Http\Controllers\ConversationController::class, 'index'])->name('conversations.index');
+    Route::get('/conversations/{conversation}', [App\Http\Controllers\ConversationController::class, 'show'])->name('conversations.show');
+    Route::post('/conversations/{conversation}/reply', [App\Http\Controllers\ConversationController::class, 'reply'])->name('conversations.reply');
+    Route::post('/conversations/{conversation}/toggle-status', [App\Http\Controllers\ConversationController::class, 'toggleStatus'])->name('conversations.toggle');
+    Route::get('/conversations/{conversation}/updates', [App\Http\Controllers\ConversationController::class, 'getUpdates'])->name('conversations.updates');
 });
 
 // Public Chat Routes
@@ -42,5 +49,6 @@ Route::get('/chat/{chatbot}/widget', function (\App\Models\Chatbot $chatbot) {
 
 Route::post('/chat/send', [App\Http\Controllers\ChatController::class, 'send'])->name('chat.send');
 Route::post('/chat/lead', [App\Http\Controllers\ChatController::class, 'submitLead'])->name('chat.lead');
+Route::get('/chat/updates', [App\Http\Controllers\ChatController::class, 'getWidgetUpdates'])->name('chat.updates');
 
 

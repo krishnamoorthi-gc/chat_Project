@@ -48,7 +48,7 @@
                         <i class="bi bi-robot"></i>
                         <span>My Chatbots</span>
                     </a>
-                    <a href="#" class="nav-item-custom">
+                    <a href="{{ route('conversations.index') }}" class="nav-item-custom {{ Route::is('conversations.*') ? 'active' : '' }}">
                         <i class="bi bi-chat-text"></i>
                         <span>Conversations</span>
                     </a>

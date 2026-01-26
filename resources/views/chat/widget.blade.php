@@ -301,6 +301,10 @@
 
     <div class="chat-footer">
         <div class="input-wrapper">
+            <label for="widgetFileInput" style="cursor:pointer; margin-right:8px; color:var(--text-muted); display:flex; align-items:center;">
+                <i class="bi bi-paperclip fs-5"></i>
+                <input type="file" id="widgetFileInput" class="d-none">
+            </label>
             <input type="text" class="chat-input" id="userInput" placeholder="{{ __('widget.input_placeholder') }}" autocomplete="off">
         </div>
         <button class="send-btn" id="sendBtn" title="{{ __('widget.send') }}"><i class="bi bi-send-fill"></i></button>
@@ -425,20 +429,47 @@
             network_issue: "{{ __('widget.network_issue') }}"
         };
 
-        const addMessage = (text, role) => {
-            if (role === 'bot') {
+        let lastMessageId = 0;
+
+        const addMessage = (msg, role) => {
+            const text = typeof msg === 'string' ? msg : msg.message;
+            const id = (typeof msg === 'object' && msg.id) ? msg.id : null;
+            const file_path = msg.file_path || null;
+            const file_type = msg.file_type || null;
+
+            if (id && document.querySelector(`.message[data-id="${id}"]`)) {
+                return;
+            }
+
+            let fileHtml = '';
+            if (file_path) {
+                if (file_type && ['jpg', 'jpeg', 'png', 'gif'].includes(file_type.toLowerCase())) {
+                    fileHtml = `<div style="margin-bottom:8px;"><img src="${file_path}" style="max-width:100%; border-radius:8px;"></div>`;
+                } else {
+                    fileHtml = `<div style="margin-bottom:8px;"><a href="${file_path}" target="_blank" style="color:inherit; text-decoration:underline;">📎 Attachment</a></div>`;
+                }
+            }
+
+            if (role === 'bot' || role === 'admin') {
                 const group = document.createElement('div');
                 group.className = 'bot-msg-group';
                 const iconHtml = `{!! isset($chatbot->settings['branding']['icon_url']) ? '<img src="'.$chatbot->settings['branding']['icon_url'].'">' : '<i class="bi bi-robot"></i>' !!}`;
                 group.innerHTML = `
-                    <div class="bot-avatar">${iconHtml}</div>
-                    <div class="message bot">${text}</div>
+                    <div class="bot-avatar">${role === 'admin' ? '<i class="bi bi-person-fill"></i>' : iconHtml}</div>
+                    <div class="message bot" ${id ? `data-id="${id}"` : ''}>
+                        ${fileHtml}
+                        ${text || ''}
+                    </div>
                 `;
                 chatContainer.appendChild(group);
             } else {
                 const div = document.createElement('div');
                 div.className = `message ${role}`;
-                div.innerText = text;
+                if (id) div.dataset.id = id;
+                div.innerHTML = `
+                    ${fileHtml}
+                    ${text || ''}
+                `;
                 chatContainer.appendChild(div);
             }
             chatContainer.scrollTop = chatContainer.scrollHeight;
@@ -446,31 +477,41 @@
 
         const sendMessage = () => {
             const message = userInput.value.trim();
-            if (!message) return;
+            const fileInput = document.getElementById('widgetFileInput');
+            const file = fileInput.files[0];
 
+            if (!message && !file) return;
+
+            // Simplified preview for user
             addMessage(message, 'user');
+            
+            const formData = new FormData();
+            formData.append('chatbot_id', '{{ $chatbot->id }}');
+            formData.append('message', message);
+            if (file) formData.append('file', file);
+
             userInput.value = '';
+            fileInput.value = '';
             typingIndicator.style.display = 'flex';
             chatContainer.scrollTop = chatContainer.scrollHeight;
 
             fetch('{{ route("chat.send") }}', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': '{{ csrf_token() }}'
                 },
-                body: JSON.stringify({
-                    chatbot_id: '{{ $chatbot->id }}',
-                    message: message
-                })
+                body: formData
             })
             .then(res => res.json())
             .then(data => {
                 typingIndicator.style.display = 'none';
                 if (data.answer) {
-                    addMessage(data.answer, 'bot');
-                } else {
-                    addMessage(translations.error_connecting, 'bot');
+                    addMessage({ message: data.answer, id: data.message_id, sender: 'bot' }, 'bot');
+                    if (data.message_id) {
+                        lastMessageId = data.message_id;
+                    }
+                } else if (data.status === 'waiting_for_agent') {
+                    // Do nothing, waiting for pollution to pick up admin reply
                 }
             })
             .catch(() => {
@@ -478,6 +519,30 @@
                 addMessage(translations.network_issue, 'bot');
             });
         };
+
+        // Polling for updates (for Live Support)
+        setInterval(async () => {
+            try {
+                const response = await fetch(`{{ route('chat.updates') }}?chatbot_id={{ $chatbot->id }}&last_message_id=${lastMessageId}`);
+                const data = await response.json();
+                
+                if (data.messages && data.messages.length > 0) {
+                    data.messages.forEach(msg => {
+                        // Only add messages not sent by 'user' (since they are added locally immediately)
+                        // Actually, to be safe and handle multi-device, we could check sender
+                        if (msg.sender !== 'user') {
+                            addMessage(msg, msg.sender);
+                        }
+                        lastMessageId = msg.id;
+                    });
+                }
+            } catch (error) {
+                // Silent fail for polling
+            }
+        }, 4000);
+
+        // Initial lastMessageId setup if needed (though it starts at 0)
+        // We could fetch history here too if we wanted.
 
         sendBtn.onclick = sendMessage;
         userInput.onkeypress = (e) => { if (e.key === 'Enter') sendMessage(); };

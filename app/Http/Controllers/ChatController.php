@@ -18,12 +18,34 @@ class ChatController extends Controller
 
         $chatbot = \App\Models\Chatbot::findOrFail($request->chatbot_id);
         
-        // --- LEAD LOGGING ---
-        $this->logLead($chatbot, $request);
+        // --- CONVERSATION & LEAD LOGGING ---
+        $sessionId = $request->session()->getId();
+        $lead = $this->logLead($chatbot, $request);
         
+        $conversation = \App\Models\Conversation::firstOrCreate(
+            ['session_id' => $sessionId, 'chatbot_id' => $chatbot->id],
+            ['lead_id' => $lead ? $lead->id : null, 'status' => 'active']
+        );
+
         $userMessage = $request->message;
 
+        // Save User Message
+        \App\Models\Message::create([
+            'conversation_id' => $conversation->id,
+            'sender' => 'user',
+            'message' => $userMessage,
+        ]);
+        
+        $conversation->touch('last_message_at');
+
         try {
+            // If conversation is in 'human' support mode, don't automatically trigger bot
+            if ($conversation->status === 'human') {
+                return response()->json([
+                    'answer' => null, // Waiting for human
+                    'status' => 'waiting_for_agent'
+                ]);
+            }
             $responseMode = $chatbot->settings['response_mode'] ?? 'ai';
             $queryVector = null;
 
@@ -53,8 +75,16 @@ class ChatController extends Controller
                     }
                 }
 
+                // Save Bot Message (Direct)
+                $botMessage = \App\Models\Message::create([
+                    'conversation_id' => $conversation->id,
+                    'sender' => 'bot',
+                    'message' => $answer,
+                ]);
+
                 return response()->json([
                     'answer' => $answer,
+                    'message_id' => $botMessage->id,
                     'sources' => [$bestChunk->source->title]
                 ]);
             }
@@ -105,8 +135,16 @@ class ChatController extends Controller
 
             $answer = $response->json('candidates.0.content.parts.0.text') ?? "I'm sorry, I couldn't generate a response.";
 
+            // Save Bot Message (AI)
+            $botMessage = \App\Models\Message::create([
+                'conversation_id' => $conversation->id,
+                'sender' => 'bot',
+                'message' => $answer,
+            ]);
+
             return response()->json([
                 'answer' => $answer,
+                'message_id' => $botMessage->id,
                 'sources' => $relevantChunks->pluck('source.title')->unique()->values()
             ]);
 
@@ -140,7 +178,7 @@ class ChatController extends Controller
                     \Illuminate\Support\Facades\Log::warning("GeoIP lookup failed: " . $e->getMessage());
                 }
 
-                \App\Models\Lead::create([
+                $lead = \App\Models\Lead::create([
                     'chatbot_id' => $chatbot->id,
                     'ip_address' => $ip,
                     'city' => $locationData['city'] ?? 'Unknown',
@@ -151,8 +189,11 @@ class ChatController extends Controller
                     'user_agent' => $request->userAgent(),
                 ]);
             }
+
+            return $lead;
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error("Lead logging failed: " . $e->getMessage());
+            return null;
         }
     }
 
@@ -197,5 +238,32 @@ class ChatController extends Controller
         }
 
         return response()->json(['status' => 'success']);
+    }
+
+    public function getWidgetUpdates(Request $request)
+    {
+        $request->validate([
+            'chatbot_id' => 'required|exists:chatbots,id',
+            'last_message_id' => 'required|integer',
+        ]);
+
+        $sessionId = $request->session()->getId();
+        $conversation = \App\Models\Conversation::where('session_id', $sessionId)
+            ->where('chatbot_id', $request->chatbot_id)
+            ->first();
+
+        if (!$conversation) {
+            return response()->json(['messages' => []]);
+        }
+
+        $messages = \App\Models\Message::where('conversation_id', $conversation->id)
+            ->where('id', '>', $request->last_message_id)
+            ->orderBy('id', 'asc')
+            ->get();
+
+        return response()->json([
+            'messages' => $messages,
+            'conversation_status' => $conversation->status
+        ]);
     }
 }
