@@ -63,11 +63,11 @@
                             <div class="row g-3">
                                 <div class="col-md-6">
                                     <label class="form-label small fw-bold text-muted">Full Name</label>
-                                    <input type="text" name="name" class="form-control form-control-lg bg-light border-0 fs-6" value="{{ old('name', $user->name) }}">
+                                    <input type="text" name="name" class="form-control form-control-lg bg-white border fs-6" value="{{ old('name', $user->name) }}">
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label small fw-bold text-muted">Email Address</label>
-                                    <input type="email" name="email" class="form-control form-control-lg bg-light border-0 fs-6" value="{{ old('email', $user->email) }}">
+                                    <input type="email" name="email" class="form-control form-control-lg bg-white border fs-6" value="{{ old('email', $user->email) }}">
                                 </div>
                                 <div class="col-12 text-end mt-4">
                                     <button type="submit" class="btn btn-primary px-4 py-2 rounded-pill fw-bold">Save Changes</button>
@@ -87,15 +87,15 @@
                             <div class="row g-3">
                                 <div class="col-12">
                                     <label class="form-label small fw-bold text-muted">Current Password</label>
-                                    <input type="password" name="current_password" class="form-control form-control-lg bg-light border-0 fs-6">
+                                    <input type="password" name="current_password" class="form-control form-control-lg bg-white border fs-6">
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label small fw-bold text-muted">New Password</label>
-                                    <input type="password" name="new_password" class="form-control form-control-lg bg-light border-0 fs-6">
+                                    <input type="password" name="new_password" class="form-control form-control-lg bg-white border fs-6">
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label small fw-bold text-muted">Confirm New Password</label>
-                                    <input type="password" name="new_password_confirmation" class="form-control form-control-lg bg-light border-0 fs-6">
+                                    <input type="password" name="new_password_confirmation" class="form-control form-control-lg bg-white border fs-6">
                                 </div>
                                 <div class="col-12 text-end mt-4">
                                     <button type="submit" class="btn btn-primary px-4 py-2 rounded-pill fw-bold">Update Password</button>
