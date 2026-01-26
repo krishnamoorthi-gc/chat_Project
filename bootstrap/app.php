@@ -17,7 +17,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         $middleware->validateCsrfTokens(except: [
-            '/chat/send',
+            // '/chat/send', // Enforce CSRF for chat as well since we send the token in widget.blade.php
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
