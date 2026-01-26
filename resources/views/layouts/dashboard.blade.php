@@ -6,6 +6,17 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ config('app.name', 'Laravel') }}</title>
     
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="ChatBot Dashboard - Manage your AI Chatbots, conversations, and leads in one place.">
+    <meta name="keywords" content="dashboard, chatbot management, analytics, leads, conversations, AI control panel">
+    <meta name="robots" content="index, follow">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ url('/dashboard') }}">
+    <meta property="og:title" content="{{ config('app.name', 'Laravel') }} - Dashboard">
+    <meta property="og:description" content="Manage your AI Chatbots and conversations efficiently.">
+    
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

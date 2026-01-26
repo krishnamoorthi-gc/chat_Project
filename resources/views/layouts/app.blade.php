@@ -8,6 +8,17 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <title>{{ config('app.name', 'Laravel') }}</title>
+    
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="ChatBot - Advanced AI Chatbot Solution for your business. Automate customer support and increase engagement.">
+    <meta name="keywords" content="chatbot, ai, artificial intelligence, automation, customer support, business tool, laravel">
+    <meta name="robots" content="index, follow">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ url('/') }}">
+    <meta property="og:title" content="{{ config('app.name', 'Laravel') }}">
+    <meta property="og:description" content="ChatBot - Advanced AI Chatbot Solution for your business. Automate customer support and increase engagement.">
 
     <!-- Fonts -->
     <link rel="dns-prefetch" href="//fonts.bunny.net">
