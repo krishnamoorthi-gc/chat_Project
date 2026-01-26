@@ -72,7 +72,7 @@
                         <i class="bi bi-graph-up"></i>
                         <span>Analytics</span>
                     </a>
-                    <a href="#" class="nav-item-custom">
+                    <a href="{{ route('settings') }}" class="nav-item-custom {{ Route::is('settings') ? 'active' : '' }}">
                         <i class="bi bi-gear"></i>
                         <span>Settings</span>
                     </a>

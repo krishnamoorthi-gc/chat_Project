@@ -18,6 +18,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard/stats', [App\Http\Controllers\DashboardController::class, 'stats'])->name('dashboard.stats');
     Route::get('/analytics', [App\Http\Controllers\AnalyticsController::class, 'index'])->name('analytics');
     
+    // Settings Routes
+    Route::get('/settings', [App\Http\Controllers\SettingsController::class, 'index'])->name('settings');
+    Route::post('/settings/update', [App\Http\Controllers\SettingsController::class, 'update'])->name('settings.update');
+    Route::post('/settings/password', [App\Http\Controllers\SettingsController::class, 'updatePassword'])->name('settings.password');
+    
     Route::resource('chatbots', App\Http\Controllers\ChatbotController::class);
     Route::resource('leads', App\Http\Controllers\LeadController::class);
     
