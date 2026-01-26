@@ -8,6 +8,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <title>{{ config('app.name', 'Laravel') }}</title>
+    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
     
     <!-- SEO Meta Tags -->
     <meta name="description" content="ChatBot - Advanced AI Chatbot Solution for your business. Automate customer support and increase engagement.">

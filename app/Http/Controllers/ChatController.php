@@ -44,13 +44,14 @@ class ChatController extends Controller
         }
 
         // Save User Message
-        \App\Models\Message::create([
+        $userMsgObj = \App\Models\Message::create([
             'conversation_id' => $conversation->id,
             'sender' => 'user',
             'message' => $userMessage,
             'file_path' => $filePath,
             'file_type' => $fileType,
         ]);
+        $userMessageId = $userMsgObj->id;
         
         $conversation->touch('last_message_at');
 
@@ -101,6 +102,7 @@ class ChatController extends Controller
                 return response()->json([
                     'answer' => $answer,
                     'message_id' => $botMessage->id,
+                    'user_message_id' => $userMessageId,
                     'sources' => [$bestChunk->source->title]
                 ]);
             }
@@ -161,6 +163,7 @@ class ChatController extends Controller
             return response()->json([
                 'answer' => $answer,
                 'message_id' => $botMessage->id,
+                'user_message_id' => $userMessageId ?? null, // We need to capture this from earlier
                 'sources' => $relevantChunks->pluck('source.title')->unique()->values()
             ]);
 

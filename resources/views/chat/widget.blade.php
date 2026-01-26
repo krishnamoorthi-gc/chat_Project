@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chatbot Widget</title>
-    <meta name="description" content="AI Chatbot Widget - Instant customer support.">
+    <title>ChatAi</title>
+    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
+    <meta name="description" content="ChatAi Widget - Instant customer support.">
     <meta name="robots" content="noindex, follow">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
@@ -330,6 +331,7 @@
         const menuDropdown = document.getElementById('menuDropdown');
         
         let isMaximized = false;
+        let messageHistory = []; // Global history state
         
         // Lead Form Logic
         const chatbotId = '{{ $chatbot->id }}';
@@ -361,9 +363,7 @@
                 fetch('{{ route("chat.lead") }}', {
                     method: 'POST',
                     body: formData,
-                    headers: {
-                        'Accept': 'application/json'
-                    }
+                    headers: { 'Accept': 'application/json' }
                 })
                 .then(res => res.json())
                 .then(data => {
@@ -383,7 +383,6 @@
                 menuDropdown.style.display = (menuDropdown.style.display === 'block') ? 'none' : 'block';
         }
 
-        // Close dropdown when clicking outside
         document.addEventListener('click', function(event) {
             if (menuDropdown && !event.target.closest('.dropdown')) {
                 menuDropdown.style.display = 'none';
@@ -399,10 +398,9 @@
 
         function downloadChat() {
             let transcript = "Chat Transcript - " + new Date().toLocaleString() + "\n\n";
-            const messages = document.querySelectorAll('.message');
-            messages.forEach(msg => {
-                const role = msg.classList.contains('user') ? 'User' : 'Bot';
-                transcript += role + ": " + msg.innerText + "\n\n";
+            messageHistory.forEach(msg => {
+                const role = msg.role === 'user' ? 'User' : 'Bot';
+                transcript += role + ": " + (msg.message || '[Attachment]') + "\n\n";
             });
             
             const blob = new Blob([transcript], { type: 'text/plain' });
@@ -462,17 +460,25 @@
         }
 
         const translations = {
-            error_connecting: "{{ __('widget.error_connecting') }}",
             network_issue: "{{ __('widget.network_issue') }}"
         };
 
         let lastMessageId = 0;
 
-        // --- Persistence Logic ---
+        // --- Persistence Logic (JSON) ---
         function saveState() {
             try {
+                // Filter out File objects before saving (they can't be stringified)
+                const serializableHistory = messageHistory.map(m => {
+                    const clone = { ...m };
+                    if (clone.file_obj) delete clone.file_obj; // Remove raw file
+                    // We keep local_file_url for session duration if needed, but it won't persist across refresh
+                    // unless we convert to base64. For now, we drop preview on refresh if not uploaded.
+                    return clone;
+                });
+
                 const state = {
-                    html: chatContainer.innerHTML,
+                    history: serializableHistory,
                     lastId: lastMessageId,
                     timestamp: Date.now()
                 };
@@ -490,17 +496,24 @@
                     const now = Date.now();
                     
                     if (now - state.timestamp < STORAGE_TTL) {
-                        chatContainer.innerHTML = state.html;
+                        messageHistory = state.history || [];
                         lastMessageId = state.lastId || 0;
                         
-                        // Recalculate lastMessageId from DOM to be safe
-                        const messagesWithId = document.querySelectorAll('.message[data-id]');
-                        if (messagesWithId.length > 0) {
-                            const lastMsg = messagesWithId[messagesWithId.length - 1];
-                            const domId = parseInt(lastMsg.dataset.id);
-                            if (domId > lastMessageId) lastMessageId = domId;
-                        }
+                        chatContainer.innerHTML = ''; // Clear default
                         
+                        // Re-render
+                        messageHistory.forEach(msg => {
+                            renderMessageToDOM(msg);
+                        });
+                        
+                        // Recalculate lastMessageId just in case
+                        if(messageHistory.length > 0) {
+                            const lastMsg = messageHistory[messageHistory.length - 1];
+                            if(lastMsg.id && lastMsg.id > lastMessageId) {
+                                lastMessageId = lastMsg.id;
+                            }
+                        }
+
                         chatContainer.scrollTop = chatContainer.scrollHeight;
                         return true;
                     } else {
@@ -513,59 +526,95 @@
             return false;
         }
 
-        const addMessage = (msg, role) => {
-            const text = typeof msg === 'string' ? msg : msg.message;
-            const id = (typeof msg === 'object' && msg.id) ? msg.id : null;
-            const file_path = msg.file_path || null;
-            const file_type = msg.file_type || null;
-
-            if (id && document.querySelector(`.message[data-id="${id}"]`)) {
+        // --- Rendering Logic ---
+        const renderMessageToDOM = (msg) => {
+            // Check if already in DOM (by ID or Temp ID)
+            const identifier = msg.id || msg.tempId;
+            if (identifier && document.querySelector(`.message[data-id="${identifier}"]`)) {
                 return;
             }
 
             let fileHtml = '';
-            if (file_path) {
-                // If it's a local file object (preview)
-                if (file_path instanceof File) {
-                     const url = URL.createObjectURL(file_path);
-                     if (file_path.type.startsWith('image/')) {
-                         fileHtml = `<div style="margin-bottom:8px;"><img src="${url}" style="max-width:100%; border-radius:8px;"></div>`;
-                     } else {
-                         fileHtml = `<div style="margin-bottom:8px;"><span style="font-size:0.85rem;">📎 ${file_path.name}</span></div>`;
-                     }
+            if (msg.file_path) {
+                if (msg.file_type && ['jpg', 'jpeg', 'png', 'gif'].includes(msg.file_type.toLowerCase())) {
+                     fileHtml = `<div style="margin-bottom:8px;"><img src="${msg.file_path}" style="max-width:100%; border-radius:8px;"></div>`;
+                } else if (!msg.file_type && msg.local_file_url) {
+                      // Local preview
+                     fileHtml = `<div style="margin-bottom:8px;"><img src="${msg.local_file_url}" style="max-width:100%; border-radius:8px;"></div>`;
                 } else {
-                     if (file_type && ['jpg', 'jpeg', 'png', 'gif'].includes(file_type.toLowerCase())) {
-                        fileHtml = `<div style="margin-bottom:8px;"><img src="${file_path}" style="max-width:100%; border-radius:8px;"></div>`;
-                    } else {
-                        fileHtml = `<div style="margin-bottom:8px;"><a href="${file_path}" target="_blank" style="color:inherit; text-decoration:underline;">📎 Attachment</a></div>`;
-                    }
+                     fileHtml = `<div style="margin-bottom:8px;"><a href="${msg.file_path}" target="_blank" style="color:inherit; text-decoration:underline;">📎 Attachment</a></div>`;
                 }
             }
 
-            if (role === 'bot' || role === 'admin') {
+            const textContent = msg.message || '';
+
+            if (msg.role === 'bot' || msg.role === 'admin') {
                 const group = document.createElement('div');
                 group.className = 'bot-msg-group';
                 const iconHtml = `{!! isset($chatbot->settings['branding']['icon_url']) ? '<img src="'.$chatbot->settings['branding']['icon_url'].'">' : '<i class="bi bi-robot"></i>' !!}`;
                 group.innerHTML = `
-                    <div class="bot-avatar">${role === 'admin' ? '<i class="bi bi-person-fill"></i>' : iconHtml}</div>
-                    <div class="message bot" ${id ? `data-id="${id}"` : ''}>
+                    <div class="bot-avatar">${msg.role === 'admin' ? '<i class="bi bi-person-fill"></i>' : iconHtml}</div>
+                    <div class="message bot" ${identifier ? `data-id="${identifier}"` : ''}>
                         ${fileHtml}
-                        ${text || ''}
+                        ${textContent}
                     </div>
                 `;
                 chatContainer.appendChild(group);
             } else {
                 const div = document.createElement('div');
-                div.className = `message ${role}`;
-                if (id) div.dataset.id = id;
+                div.className = `message ${msg.role}`;
+                if (identifier) div.dataset.id = identifier;
                 div.innerHTML = `
                     ${fileHtml}
-                    ${text || ''}
+                    ${textContent}
                 `;
                 chatContainer.appendChild(div);
             }
             chatContainer.scrollTop = chatContainer.scrollHeight;
-            saveState(); // Save after valid update
+        };
+
+        // --- Core Message Logic ---
+        const addMessage = (data, role) => {
+            // Unify input
+            const msgObj = {
+                role: role,
+                message: typeof data === 'string' ? data : (data.message || ''),
+                id: (typeof data === 'object' && data.id) ? data.id : null,
+                tempId: (typeof data === 'object' && data.tempId) ? data.tempId : null,
+                file_path: (typeof data === 'object' && data.file_path) ? data.file_path : null,
+                file_type: (typeof data === 'object' && data.file_type) ? data.file_type : null,
+            };
+
+            // Handle local file preview
+            if (msgObj.file_path instanceof File) {
+                 msgObj.file_obj = msgObj.file_path; // Keep ref
+                 msgObj.local_file_url = URL.createObjectURL(msgObj.file_path);
+                 msgObj.file_path = null; // Don't put File object in path
+            }
+
+            // Deduplication Check
+            const existingIndex = messageHistory.findIndex(m => {
+                // Determine equality
+                if (msgObj.id && m.id === msgObj.id) return true;
+                if (msgObj.tempId && m.tempId === msgObj.tempId) return true;
+                return false;
+            });
+
+            if (existingIndex !== -1) {
+                // Update existing
+                // If we are updating with a real ID a message that had a temp ID
+                if (msgObj.id && !messageHistory[existingIndex].id) {
+                    messageHistory[existingIndex].id = msgObj.id;
+                    // Update DOM ID
+                    const domEl = document.querySelector(`.message[data-id="${messageHistory[existingIndex].tempId}"]`);
+                    if(domEl) domEl.dataset.id = msgObj.id;
+                }
+                return;
+            }
+
+            messageHistory.push(msgObj);
+            renderMessageToDOM(msgObj);
+            saveState();
         };
 
         const sendMessage = () => {
@@ -575,8 +624,14 @@
 
             if (!message && !file) return;
 
-            // Simplified preview for user
-            addMessage({ message: message, file_path: file }, 'user');
+            const tempId = 'temp-' + Date.now();
+
+            // Add User Message Immediately
+            addMessage({ 
+                message: message, 
+                file_path: file,
+                tempId: tempId 
+            }, 'user');
             
             const formData = new FormData();
             formData.append('chatbot_id', '{{ $chatbot->id }}');
@@ -584,44 +639,54 @@
             if (file) formData.append('file', file);
 
             userInput.value = '';
-            clearFile(); // Clear file input after sending
+            clearFile(); 
             
             typingIndicator.style.display = 'flex';
             chatContainer.scrollTop = chatContainer.scrollHeight;
 
             fetch('{{ route("chat.send") }}', {
                 method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                },
+                headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
                 body: formData
             })
             .then(res => res.json())
             .then(data => {
                 typingIndicator.style.display = 'none';
+
+                // Update User Message with Real ID if provided
+                if (data.user_message_id) {
+                    const userMsg = messageHistory.find(m => m.tempId === tempId);
+                    if (userMsg) {
+                        userMsg.id = data.user_message_id;
+                        // Update DOM
+                        const domEl = document.querySelector(`.message[data-id="${tempId}"]`);
+                        if(domEl) domEl.dataset.id = data.user_message_id;
+                        saveState();
+                    }
+                }
+
                 if (data.answer) {
-                    addMessage({ message: data.answer, id: data.message_id, sender: 'bot' }, 'bot');
+                    addMessage({ message: data.answer, id: data.message_id }, 'bot');
                     if (data.message_id) {
                         lastMessageId = data.message_id;
-                        saveState(); // Update ID in state
+                        saveState();
                     }
-                } else if (data.status === 'waiting_for_agent') {
-                    // Do nothing, waiting for pollution to pick up admin reply
                 }
             })
             .catch(() => {
                 typingIndicator.style.display = 'none';
-                addMessage(translations.network_issue, 'bot');
+                addMessage({ message: translations.network_issue }, 'bot');
             });
         };
 
         // Initialize state on load
         if (!restoreState()) {
-             // If no state restored, we might want to ensure the welcome message is there?
-             // It's already in the HTML by default, so we're good.
+             // Default welcome state is in HTML, but we need to track it in history if we want to save it?
+             // Actually, usually welcome message is static. 
+             // If we rely on history array, we should probably grab the static welcome message into the array on first load?
+             // Or just let it be. The polling will fetch new messages.
         }
 
-        // Polling for updates (for Live Support)
         setInterval(async () => {
             try {
                 const response = await fetch(`{{ route('chat.updates') }}?chatbot_id={{ $chatbot->id }}&last_message_id=${lastMessageId}`);
@@ -629,18 +694,20 @@
                 
                 if (data.messages && data.messages.length > 0) {
                     data.messages.forEach(msg => {
-                        // Only add messages not sent by 'user' (since they are added locally immediately)
-                        // Actually, to be safe and handle multi-device, we could check sender
-                        if (msg.sender !== 'user') {
-                            addMessage(msg, msg.sender);
-                        }
+                        // msg is from DB: { id, sender, message, ... }
+                        // sender 'user' or 'bot'
+                        addMessage({
+                            id: msg.id,
+                            message: msg.message,
+                            file_path: msg.file_path,
+                            file_type: msg.file_type
+                        }, msg.sender);
+                        
                         lastMessageId = msg.id;
                     });
-                    saveState(); // Save final state after poll batch
+                    saveState();
                 }
-            } catch (error) {
-                // Silent fail for polling
-            }
+            } catch (error) { }
         }, 4000);
 
         sendBtn.onclick = sendMessage;
