@@ -14,7 +14,7 @@
                     <div class="stat-card h-100">
                         <div class="stat-info">
                             <p>Total Chatbots</p>
-                            <h3>{{ $totalChatbots }}</h3>
+                            <h3 id="stat-total-chatbots">{{ $totalChatbots }}</h3>
                             <div class="stat-trend up">
                                 <i class="bi bi-arrow-up-right"></i> +14% Inc
                             </div>
@@ -35,7 +35,7 @@
                     <div class="stat-card h-100">
                         <div class="stat-info">
                             <p>Active Chatbots</p>
-                            <h3>{{ $activeChatbots }}</h3>
+                            <h3 id="stat-active-chatbots">{{ $activeChatbots }}</h3>
                             <div class="stat-trend up" style="color: #ffce73;">
                                 <i class="bi bi-arrow-up-right"></i> +06% Inc
                             </div>
@@ -56,7 +56,7 @@
                     <div class="stat-card h-100">
                         <div class="stat-info">
                             <p>Knowledge Sources</p>
-                            <h3>{{ $totalKnowledgeSources }}</h3>
+                            <h3 id="stat-total-sources">{{ $totalKnowledgeSources }}</h3>
                             <div class="stat-trend down">
                                 <i class="bi bi-arrow-down-right"></i> +04% Dec
                             </div>
@@ -77,7 +77,7 @@
                     <div class="stat-card h-100">
                         <div class="stat-info">
                             <p>Total Leads</p>
-                            <h3>{{ $totalLeads }}</h3>
+                            <h3 id="stat-total-leads">{{ $totalLeads }}</h3>
                             <div class="stat-trend up" style="color: #6c5dd3;">
                                 <i class="bi bi-person-plus-fill"></i> New Growth
                             </div>
@@ -173,5 +173,29 @@
             </div>
         </div>
     </div>
+    </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const stats = {
+            chatbots: document.getElementById('stat-total-chatbots'),
+            active: document.getElementById('stat-active-chatbots'),
+            sources: document.getElementById('stat-total-sources'),
+            leads: document.getElementById('stat-total-leads')
+        };
+
+        setInterval(() => {
+            fetch('{{ route("dashboard.stats") }}')
+                .then(response => response.json())
+                .then(data => {
+                    if (stats.chatbots) stats.chatbots.innerText = data.totalChatbots;
+                    if (stats.active) stats.active.innerText = data.activeChatbots;
+                    if (stats.sources) stats.sources.innerText = data.totalKnowledgeSources;
+                    if (stats.leads) stats.leads.innerText = data.totalLeads;
+                })
+                .catch(error => console.error('Error fetching dashboard stats:', error));
+        }, 3000); // Update every 3 seconds
+    });
+</script>
 @endsection

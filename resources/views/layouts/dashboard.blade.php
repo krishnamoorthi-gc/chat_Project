@@ -68,7 +68,7 @@
                         <i class="bi bi-people"></i>
                         <span>Leads</span>
                     </a>
-                    <a href="#" class="nav-item-custom">
+                    <a href="{{ route('analytics') }}" class="nav-item-custom {{ Route::is('analytics') ? 'active' : '' }}">
                         <i class="bi bi-graph-up"></i>
                         <span>Analytics</span>
                     </a>
