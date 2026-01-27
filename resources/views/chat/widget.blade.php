@@ -237,24 +237,42 @@
             <h4 style="font-weight:800; margin-bottom:8px; color:var(--text-main);">Welcome! 👋</h4>
             <p style="font-size:0.9rem; color:var(--text-muted); margin:0;">Please introduce yourself to start chatting.</p>
         </div>
+        @php $selectedFields = $chatbot->settings['lead_form_fields'] ?? ['name', 'email']; @endphp
         <form id="leadForm" style="background:white; padding:25px; border-radius:20px; box-shadow:0 4px 20px rgba(0,0,0,0.02);">
-            <div style="margin-bottom:15px;">
-                <label style="font-size:0.75rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; margin-bottom:6px; display:block;">Full Name</label>
-                <input type="text" name="name" required style="width:100%; padding:12px; border:2px solid #f1f5f9; border-radius:12px; font-family:inherit; outline:none; transition:border-color 0.2s;" onfocus="this.style.borderColor=getComputedStyle(document.documentElement).getPropertyValue('--primary-color')">
-            </div>
-            <div style="margin-bottom:15px;">
-                <label style="font-size:0.75rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; margin-bottom:6px; display:block;">Email Address</label>
-                <input type="email" name="email" required style="width:100%; padding:12px; border:2px solid #f1f5f9; border-radius:12px; font-family:inherit; outline:none; transition:border-color 0.2s;" onfocus="this.style.borderColor=getComputedStyle(document.documentElement).getPropertyValue('--primary-color')">
-            </div>
-            <div style="display:flex; gap:10px; margin-bottom:20px;">
-                <div style="flex:1;">
-                    <label style="font-size:0.75rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; margin-bottom:6px; display:block;">City</label>
-                    <input type="text" name="city" style="width:100%; padding:12px; border:2px solid #f1f5f9; border-radius:12px; font-family:inherit; outline:none; transition:border-color 0.2s;" onfocus="this.style.borderColor=getComputedStyle(document.documentElement).getPropertyValue('--primary-color')">
+            @if(in_array('name', $selectedFields))
+                <div style="margin-bottom:15px;">
+                    <label style="font-size:0.75rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; margin-bottom:6px; display:block;">Full Name</label>
+                    <input type="text" name="name" required style="width:100%; padding:12px; border:2px solid #f1f5f9; border-radius:12px; font-family:inherit; outline:none; transition:border-color 0.2s;" onfocus="this.style.borderColor=getComputedStyle(document.documentElement).getPropertyValue('--primary-color')">
                 </div>
-                <div style="flex:1;">
-                    <label style="font-size:0.75rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; margin-bottom:6px; display:block;">Country</label>
-                    <input type="text" name="country" style="width:100%; padding:12px; border:2px solid #f1f5f9; border-radius:12px; font-family:inherit; outline:none; transition:border-color 0.2s;" onfocus="this.style.borderColor=getComputedStyle(document.documentElement).getPropertyValue('--primary-color')">
+            @endif
+
+            @if(in_array('email', $selectedFields))
+                <div style="margin-bottom:15px;">
+                    <label style="font-size:0.75rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; margin-bottom:6px; display:block;">Email Address</label>
+                    <input type="email" name="email" required style="width:100%; padding:12px; border:2px solid #f1f5f9; border-radius:12px; font-family:inherit; outline:none; transition:border-color 0.2s;" onfocus="this.style.borderColor=getComputedStyle(document.documentElement).getPropertyValue('--primary-color')">
                 </div>
+            @endif
+
+            @if(in_array('phone', $selectedFields))
+                <div style="margin-bottom:15px;">
+                    <label style="font-size:0.75rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; margin-bottom:6px; display:block;">Phone Number</label>
+                    <input type="tel" name="phone" required style="width:100%; padding:12px; border:2px solid #f1f5f9; border-radius:12px; font-family:inherit; outline:none; transition:border-color 0.2s;" onfocus="this.style.borderColor=getComputedStyle(document.documentElement).getPropertyValue('--primary-color')">
+                </div>
+            @endif
+
+            <div style="display:{{ (in_array('city', $selectedFields) || in_array('country', $selectedFields)) ? 'flex' : 'none' }}; gap:10px; margin-bottom:20px;">
+                @if(in_array('city', $selectedFields))
+                    <div style="flex:1;">
+                        <label style="font-size:0.75rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; margin-bottom:6px; display:block;">City</label>
+                        <input type="text" name="city" required style="width:100%; padding:12px; border:2px solid #f1f5f9; border-radius:12px; font-family:inherit; outline:none; transition:border-color 0.2s;" onfocus="this.style.borderColor=getComputedStyle(document.documentElement).getPropertyValue('--primary-color')">
+                    </div>
+                @endif
+                @if(in_array('country', $selectedFields))
+                    <div style="flex:1;">
+                        <label style="font-size:0.75rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; margin-bottom:6px; display:block;">Country</label>
+                        <input type="text" name="country" required style="width:100%; padding:12px; border:2px solid #f1f5f9; border-radius:12px; font-family:inherit; outline:none; transition:border-color 0.2s;" onfocus="this.style.borderColor=getComputedStyle(document.documentElement).getPropertyValue('--primary-color')">
+                    </div>
+                @endif
             </div>
             <button type="submit" id="startChatBtn" style="width:100%; background:var(--primary-gradient); color:white; border:none; padding:14px; border-radius:12px; font-weight:600; cursor:pointer; font-size:1rem; box-shadow:0 4px 15px rgba(99, 102, 241, 0.3);">Start Conversation</button>
         </form>

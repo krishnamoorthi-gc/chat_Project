@@ -420,7 +420,11 @@
                                                 </div>
                                                 <div>
                                                     <div class="fw-bold">{{ $lead->name ?? 'Guest Visitor' }}</div>
-                                                    <div class="small text-muted">{{ $lead->email ?? 'No email provided' }}</div>
+                                                    <div class="small text-muted">
+                                                        @if($lead->email) <i class="bi bi-envelope me-1"></i>{{ $lead->email }} @endif
+                                                        @if($lead->phone) <br><i class="bi bi-telephone me-1"></i>{{ $lead->phone }} @endif
+                                                        @if(!$lead->email && !$lead->phone) No contact info @endif
+                                                    </div>
                                                 </div>
                                             </div>
                                         </td>
@@ -589,19 +593,37 @@
                                         <input class="form-check-input" type="checkbox" role="switch" id="enableLeadForm" name="lead_form_enabled" value="1" {{ ($chatbot->settings['lead_form_enabled'] ?? false) ? 'checked' : '' }} style="transform: scale(1.3);">
                                     </div>
                                 </div>
-                                <div class="bg-light rounded-3 p-3 border-start border-4 border-success">
-                                    <div class="d-flex gap-2 mb-2">
-                                        <span class="badge bg-white text-dark border">Name</span>
-                                        <span class="badge bg-white text-dark border">Email</span>
-                                    </div>
-                                    <div class="d-flex gap-2">
-                                        <span class="badge bg-white text-dark border">City</span>
-                                        <span class="badge bg-white text-dark border">Country</span>
-                                    </div>
-                                    <div class="mt-2 text-muted" style="font-size: 0.7rem;">
-                                        <i class="bi bi-info-circle me-1"></i> Users must fill this form to proceed.
-                                    </div>
-                                </div>
+                                 @php 
+                                    $selectedFields = $chatbot->settings['lead_form_fields'] ?? ['name', 'email']; 
+                                 @endphp
+                                 <div class="bg-light rounded-3 p-3 border-start border-4 border-success mt-3" id="leadFormFields" style="{{ ($chatbot->settings['lead_form_enabled'] ?? false) ? '' : 'display: none;' }}">
+                                     <p class="small fw-bold text-muted text-uppercase mb-2" style="font-size: 0.65rem;">Select fields to collect:</p>
+                                     <div class="d-flex flex-wrap gap-3">
+                                         <div class="form-check">
+                                             <input class="form-check-input" type="checkbox" name="lead_form_fields[]" value="name" id="field_name" {{ in_array('name', $selectedFields) ? 'checked' : '' }}>
+                                             <label class="form-check-label small" for="field_name">Name</label>
+                                         </div>
+                                         <div class="form-check">
+                                             <input class="form-check-input" type="checkbox" name="lead_form_fields[]" value="email" id="field_email" {{ in_array('email', $selectedFields) ? 'checked' : '' }}>
+                                             <label class="form-check-label small" for="field_email">Email</label>
+                                         </div>
+                                         <div class="form-check">
+                                             <input class="form-check-input" type="checkbox" name="lead_form_fields[]" value="phone" id="field_phone" {{ in_array('phone', $selectedFields) ? 'checked' : '' }}>
+                                             <label class="form-check-label small" for="field_phone">Phone</label>
+                                         </div>
+                                         <div class="form-check">
+                                             <input class="form-check-input" type="checkbox" name="lead_form_fields[]" value="city" id="field_city" {{ in_array('city', $selectedFields) ? 'checked' : '' }}>
+                                             <label class="form-check-label small" for="field_city">City</label>
+                                         </div>
+                                         <div class="form-check">
+                                             <input class="form-check-input" type="checkbox" name="lead_form_fields[]" value="country" id="field_country" {{ in_array('country', $selectedFields) ? 'checked' : '' }}>
+                                             <label class="form-check-label small" for="field_country">Country</label>
+                                         </div>
+                                     </div>
+                                     <div class="mt-3 text-muted" style="font-size: 0.7rem;">
+                                         <i class="bi bi-info-circle me-1"></i> Visitors must provide selected details before chatting.
+                                     </div>
+                                 </div>
                              </div>
                         </div>
 
@@ -683,6 +705,11 @@
             </form>
 
             <script>
+                document.getElementById('enableLeadForm').addEventListener('change', function() {
+                    const fields = document.getElementById('leadFormFields');
+                    fields.style.display = this.checked ? 'block' : 'none';
+                });
+
                 function addSuggestedQuestion() {
                     const container = document.getElementById('suggested-questions-container');
                     if (container.children.length >= 4) {

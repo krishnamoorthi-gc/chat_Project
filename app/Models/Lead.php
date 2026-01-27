@@ -14,6 +14,7 @@ class Lead extends Model
         'ip_address',
         'name',
         'email',
+        'phone',
         'city',
         'region',
         'country',

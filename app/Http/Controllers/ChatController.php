@@ -218,15 +218,20 @@ class ChatController extends Controller
 
     public function submitLead(Request $request)
     {
-        $request->validate([
-            'chatbot_id' => 'required|exists:chatbots,id',
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|max:255',
-            'city' => 'nullable|string|max:255',
-            'country' => 'nullable|string|max:255',
-        ]);
-
         $chatbot = \App\Models\Chatbot::findOrFail($request->chatbot_id);
+        $selectedFields = $chatbot->settings['lead_form_fields'] ?? ['name', 'email'];
+
+        $rules = [
+            'chatbot_id' => 'required|exists:chatbots,id',
+        ];
+
+        if (in_array('name', $selectedFields)) $rules['name'] = 'required|string|max:255';
+        if (in_array('email', $selectedFields)) $rules['email'] = 'required|email|max:255';
+        if (in_array('phone', $selectedFields)) $rules['phone'] = 'required|string|max:255';
+        if (in_array('city', $selectedFields)) $rules['city'] = 'required|string|max:255';
+        if (in_array('country', $selectedFields)) $rules['country'] = 'required|string|max:255';
+
+        $validated = $request->validate($rules);
         $ip = $request->ip();
 
         // Find existing lead by IP or create new
@@ -234,26 +239,24 @@ class ChatController extends Controller
             ->where('ip_address', $ip)
             ->first();
 
-        if ($lead && (!$lead->email || $lead->email === $request->email)) {
-            $lead->update([
-                'name' => $request->name,
-                'email' => $request->email,
-                'city' => $request->city ?: $lead->city,
-                'country' => $request->country ?: $lead->country,
-                'last_visit_at' => now(),
-            ]);
+        $data = [
+            'chatbot_id' => $chatbot->id,
+            'ip_address' => $ip,
+            'last_visit_at' => now(),
+            'user_agent' => $request->userAgent(),
+        ];
+
+        if ($request->has('name')) $data['name'] = $request->name;
+        if ($request->has('email')) $data['email'] = $request->email;
+        if ($request->has('phone')) $data['phone'] = $request->phone;
+        if ($request->has('city')) $data['city'] = $request->city;
+        if ($request->has('country')) $data['country'] = $request->country;
+
+        if ($lead) {
+            $lead->update($data);
         } else {
-            \App\Models\Lead::create([
-                'chatbot_id' => $chatbot->id,
-                'ip_address' => $ip,
-                'name' => $request->name,
-                'email' => $request->email,
-                'city' => $request->city ?? 'Unknown',
-                'country' => $request->country ?? 'Unknown',
-                'visit_count' => 1,
-                'last_visit_at' => now(),
-                'user_agent' => $request->userAgent(),
-            ]);
+            $data['visit_count'] = 1;
+            \App\Models\Lead::create($data);
         }
 
         return response()->json(['status' => 'success']);

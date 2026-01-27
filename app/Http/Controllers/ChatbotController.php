@@ -77,6 +77,7 @@ class ChatbotController extends Controller
             $settings['response_mode'] = $request->response_mode;
             // Since this comes from the main settings form, we update the toggle here
             $settings['lead_form_enabled'] = $request->has('lead_form_enabled');
+            $settings['lead_form_fields'] = $request->lead_form_fields ?? ['name', 'email'];
         }
 
         if ($request->has('language')) {
