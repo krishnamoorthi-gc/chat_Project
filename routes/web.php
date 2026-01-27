@@ -60,4 +60,17 @@ Route::post('/chat/send', [App\Http\Controllers\ChatController::class, 'send'])-
 Route::post('/chat/lead', [App\Http\Controllers\ChatController::class, 'submitLead'])->name('chat.lead');
 Route::get('/chat/updates', [App\Http\Controllers\ChatController::class, 'getWidgetUpdates'])->name('chat.updates');
 
+// Admin Routes
+Route::prefix('admin')->name('admin.')->group(function () {
+    Route::get('/login', [App\Http\Controllers\Admin\AdminAuthController::class, 'showLoginForm'])->name('login');
+    Route::post('/login', [App\Http\Controllers\Admin\AdminAuthController::class, 'login']);
+    Route::post('/logout', [App\Http\Controllers\Admin\AdminAuthController::class, 'logout'])->name('logout');
 
+    Route::middleware(['auth', 'admin'])->group(function () {
+        Route::get('/', [App\Http\Controllers\Admin\AdminController::class, 'index'])->name('dashboard');
+        Route::get('/users', [App\Http\Controllers\Admin\AdminController::class, 'users'])->name('users.index');
+        Route::post('/users/{user}/toggle-status', [App\Http\Controllers\Admin\AdminController::class, 'toggleStatus'])->name('users.toggle-status');
+        Route::post('/users/{user}/update-plan', [App\Http\Controllers\Admin\AdminController::class, 'updatePlan'])->name('users.update-plan');
+        Route::get('/users/{user}/bots', [App\Http\Controllers\Admin\AdminController::class, 'showUserBots'])->name('users.bots');
+    });
+});

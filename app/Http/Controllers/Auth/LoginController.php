@@ -27,6 +27,22 @@ class LoginController extends Controller
      */
     protected $redirectTo = '/dashboard';
 
+    protected function authenticated(\Illuminate\Http\Request $request, $user)
+    {
+        if (!$user->is_active) {
+            auth()->logout();
+            return back()->withErrors([
+                $this->username() => 'Your account has been disabled. Please contact support.',
+            ]);
+        }
+        
+        if ($user->is_admin) {
+            return redirect()->route('admin.dashboard');
+        }
+
+        return redirect()->intended($this->redirectTo);
+    }
+
     /**
      * Create a new controller instance.
      *
