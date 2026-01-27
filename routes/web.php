@@ -24,6 +24,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/settings/password', [App\Http\Controllers\SettingsController::class, 'updatePassword'])->name('settings.password');
     
     Route::resource('chatbots', App\Http\Controllers\ChatbotController::class);
+    Route::get('/leads/export', [App\Http\Controllers\LeadController::class, 'export'])->name('leads.export');
     Route::resource('leads', App\Http\Controllers\LeadController::class);
     
     Route::post('/knowledge/upload', [App\Http\Controllers\KnowledgeController::class, 'upload'])->name('knowledge.upload');

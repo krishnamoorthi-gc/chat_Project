@@ -11,7 +11,11 @@
                     <h5 class="fw-bold mb-1">Visitor Leads</h5>
                     <p class="text-muted small mb-0">Track users interacting with your chatbots</p>
                 </div>
-                <!-- Optional: Filter or Export -->
+                <div class="d-flex gap-2">
+                    <a href="{{ route('leads.export') }}" class="btn btn-outline-primary btn-sm rounded-pill px-3">
+                        <i class="bi bi-download me-1"></i> Export CSV
+                    </a>
+                </div>
             </div>
         </div>
         <div class="card-body p-0">
@@ -38,7 +42,17 @@
                                     </div>
                                     <div>
                                         <div class="fw-bold">{{ $lead->name ?? 'Guest Visitor' }}</div>
-                                        <div class="small text-muted">{{ $lead->email ?? 'No email provided' }}</div>
+                                        <div class="small text-muted">
+                                            @if($lead->email)
+                                                <i class="bi bi-envelope me-1"></i>{{ $lead->email }}
+                                            @endif
+                                            @if($lead->phone)
+                                                <br><i class="bi bi-telephone me-1"></i>{{ $lead->phone }}
+                                            @endif
+                                            @if(!$lead->email && !$lead->phone)
+                                                No contact info
+                                            @endif
+                                        </div>
                                     </div>
                                 </div>
                             </td>
