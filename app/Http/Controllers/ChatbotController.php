@@ -41,7 +41,7 @@ class ChatbotController extends Controller
             abort(403);
         }
         
-        $chatbot->load('knowledgeSources');
+        $chatbot->load('knowledgeSources', 'leads');
         return view('chatbots.show', compact('chatbot'));
     }
 

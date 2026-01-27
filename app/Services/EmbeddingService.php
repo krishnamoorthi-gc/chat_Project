@@ -13,12 +13,12 @@ class EmbeddingService
     public function getEmbedding(string $text): array
     {
         try {
-            $apiKey = env('GEMINI_API_KEY');
+            $apiKey = env('GEMINI_API_KEY') ?: env('GOOGLE_API_KEY');
             // Gemini embedding model
             $model = 'text-embedding-004';
             $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:embedContent?key={$apiKey}";
 
-            $response = Http::post($url, [
+            $response = Http::withoutVerifying()->post($url, [
                 'model' => "models/{$model}",
                 'content' => [
                     'parts' => [

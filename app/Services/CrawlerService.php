@@ -13,7 +13,7 @@ class CrawlerService
     public function crawl(string $url): string
     {
         try {
-            $response = Http::timeout(30)->get($url);
+            $response = Http::withoutVerifying()->timeout(30)->get($url);
 
             if (!$response->successful()) {
                 throw new \Exception("Could not fetch URL: " . $response->status());
@@ -55,7 +55,7 @@ class CrawlerService
     public function getUrlsFromSitemap(string $sitemapUrl): array
     {
         try {
-            $response = Http::get($sitemapUrl);
+            $response = Http::withoutVerifying()->get($sitemapUrl);
             if (!$response->successful()) return [];
 
             $xml = simplexml_load_string($response->body());

@@ -5,6 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ config('app.name', 'Laravel') }}</title>
+    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
+    
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="ChatBot Dashboard - Manage your AI Chatbots, conversations, and leads in one place.">
+    <meta name="keywords" content="dashboard, chatbot management, analytics, leads, conversations, AI control panel">
+    <meta name="robots" content="index, follow">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ url('/dashboard') }}">
+    <meta property="og:title" content="{{ config('app.name', 'Laravel') }} - Dashboard">
+    <meta property="og:description" content="Manage your AI Chatbots and conversations efficiently.">
     
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -15,54 +27,58 @@
     <!-- Scripts -->
     @vite(['resources/sass/app.scss', 'resources/js/app.js'])
 
+    <!-- Scripts -->
+    @vite(['resources/sass/app.scss', 'resources/js/app.js'])
+    
     <style>
-        /* Sidebar Mini Styles */
-        .sidebar.mini {
-            width: 80px;
-            padding: 20px 10px;
-        }
-        .sidebar.mini .sidebar-header span,
-        .sidebar.mini .nav-item-custom span,
-        .sidebar.mini .upgrade-promo,
-        .sidebar.mini .sidebar-nav .nav-section-title {
+        /* Search Results Dropdown */
+        .search-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 100%;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            margin-top: 10px;
+            z-index: 1000;
             display: none;
+            overflow: hidden;
+            border: 1px solid #f0f0f0;
         }
-        .sidebar.mini .nav-item-custom {
-            justify-content: center;
-            padding: 12px;
+        .search-results.show {
+            display: block;
         }
-        .sidebar.mini .nav-item-custom i {
-            margin-right: 0;
-            font-size: 1.4rem;
-        }
-        .sidebar.mini .sidebar-header {
-            justify-content: center;
-        }
-        .dashboard-wrapper.sidebar-collapsed .main-content {
-            margin-left: 80px;
-        }
-        
-        /* Transition */
-        .sidebar, .main-content {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .sidebar-toggle-btn {
-            background: none;
-            border: none;
-            color: var(--dash-text-gray);
-            font-size: 1.5rem;
-            cursor: pointer;
-            padding: 5px;
+        .search-result-item {
+            padding: 12px 15px;
             display: flex;
             align-items: center;
-            justify-content: center;
-            border-radius: 8px;
-            transition: all 0.2s;
+            color: var(--dash-text-dark);
+            text-decoration: none;
+            transition: background 0.2s;
+            cursor: pointer;
+            border-bottom: 1px solid #f8f9fa;
         }
-        .sidebar-toggle-btn:hover {
-            background: #f0f0f0;
+        .search-result-item:last-child {
+            border-bottom: none;
+        }
+        .search-result-item:hover {
+            background: #f8f9fa;
             color: var(--dash-primary);
+        }
+        .search-result-item i {
+            margin-right: 12px;
+            font-size: 1.1rem;
+            color: var(--dash-text-gray);
+        }
+        .search-result-item:hover i {
+            color: var(--dash-primary);
+        }
+        .no-results {
+            padding: 12px 15px;
+            color: var(--dash-text-gray);
+            font-size: 0.9rem;
+            text-align: center;
         }
     </style>
 </head>
@@ -78,12 +94,12 @@
             <!-- Sidebar -->
             <div class="sidebar" id="sidebar">
                 <div class="sidebar-header d-flex align-items-center justify-content-between">
-                    <div class="d-flex align-items-center">
+                    <div class="logo-wrapper d-flex align-items-center">
                         <i class="bi bi-robot"></i>
                         <span class="ms-2 fw-bold">ChatApp</span>
                     </div>
                     <button class="sidebar-toggle-btn d-none d-lg-flex" onclick="toggleSidebar()">
-                        <i class="bi bi-text-indent-left" id="toggleIcon"></i>
+                        <i class="bi bi-list" id="toggleIcon"></i>
                     </button>
                 </div>
                 
@@ -96,7 +112,7 @@
                         <i class="bi bi-robot"></i>
                         <span>My Chatbots</span>
                     </a>
-                    <a href="#" class="nav-item-custom">
+                    <a href="{{ route('conversations.index') }}" class="nav-item-custom {{ Route::is('conversations.*') ? 'active' : '' }}">
                         <i class="bi bi-chat-text"></i>
                         <span>Conversations</span>
                     </a>
@@ -104,11 +120,11 @@
                         <i class="bi bi-people"></i>
                         <span>Leads</span>
                     </a>
-                    <a href="#" class="nav-item-custom">
+                    <a href="{{ route('analytics') }}" class="nav-item-custom {{ Route::is('analytics') ? 'active' : '' }}">
                         <i class="bi bi-graph-up"></i>
                         <span>Analytics</span>
                     </a>
-                    <a href="#" class="nav-item-custom">
+                    <a href="{{ route('settings') }}" class="nav-item-custom {{ Route::is('settings') ? 'active' : '' }}">
                         <i class="bi bi-gear"></i>
                         <span>Settings</span>
                     </a>
@@ -144,9 +160,10 @@
                     </div>
                     
                     <div class="d-flex align-items-center gap-3">
-                        <div class="search-bar d-none d-md-flex">
+                        <div class="search-bar d-none d-md-flex" style="position: relative;">
                             <i class="bi bi-search"></i>
-                            <input type="text" placeholder="Search...">
+                            <input type="text" id="searchInput" placeholder="Search..." autocomplete="off">
+                            <div id="searchResults" class="search-results"></div>
                         </div>
                         
                         <div class="user-nav d-flex align-items-center gap-2 ps-3 border-start">
@@ -169,16 +186,16 @@
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             const wrapper = document.getElementById('dashboardWrapper');
-            const icon = document.getElementById('toggleIcon');
+            // const icon = document.getElementById('toggleIcon'); // No longer toggling icon class
             
             sidebar.classList.toggle('mini');
             wrapper.classList.toggle('sidebar-collapsed');
             
             if (sidebar.classList.contains('mini')) {
-                icon.classList.replace('bi-text-indent-left', 'bi-text-indent-right');
+                // icon.classList.replace('bi-text-indent-left', 'bi-text-indent-right');
                 localStorage.setItem('sidebar-mode', 'mini');
             } else {
-                icon.classList.replace('bi-text-indent-right', 'bi-text-indent-left');
+                // icon.classList.replace('bi-text-indent-right', 'bi-text-indent-left');
                 localStorage.setItem('sidebar-mode', 'full');
             }
         }
@@ -188,6 +205,72 @@
             const mode = localStorage.getItem('sidebar-mode');
             if (mode === 'mini') {
                 toggleSidebar();
+            }
+
+            // Search Functionality
+            const searchInput = document.getElementById('searchInput');
+            const searchResults = document.getElementById('searchResults');
+            
+            // Define searchable items with Blade routes
+            const searchItems = [
+                { title: 'Dashboard', url: "{{ route('dashboard') }}", icon: 'bi-grid-fill' },
+                { title: 'My Chatbots', url: "{{ route('chatbots.index') }}", icon: 'bi-robot' },
+                { title: 'Conversations', url: "{{ route('conversations.index') }}", icon: 'bi-chat-text' },
+                { title: 'Leads', url: "{{ route('leads.index') }}", icon: 'bi-people' },
+                { title: 'Analytics', url: "{{ route('analytics') }}", icon: 'bi-graph-up' },
+                { title: 'Settings', url: "{{ route('settings') }}", icon: 'bi-gear' },
+                { title: 'Knowledge Base', url: "{{ route('help') }}", icon: 'bi-book' },
+                { title: 'Profile', url: "{{ route('settings') }}", icon: 'bi-person-circle' } 
+            ];
+
+            searchInput.addEventListener('input', function(e) {
+                const query = e.target.value.toLowerCase();
+                
+                if (query.length === 0) {
+                    searchResults.classList.remove('show');
+                    return;
+                }
+
+                const filteredItems = searchItems.filter(item => 
+                    item.title.toLowerCase().includes(query)
+                );
+
+                renderResults(filteredItems);
+            });
+
+            // Close results when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
+                    searchResults.classList.remove('show');
+                }
+            });
+
+            // Focus handling
+            searchInput.addEventListener('focus', function() {
+                if (this.value.length > 0) {
+                    searchResults.classList.add('show');
+                }
+            });
+
+            function renderResults(items) {
+                searchResults.innerHTML = '';
+                
+                if (items.length === 0) {
+                    searchResults.innerHTML = '<div class="no-results">No results found</div>';
+                } else {
+                    items.forEach(item => {
+                        const link = document.createElement('a');
+                        link.href = item.url;
+                        link.className = 'search-result-item';
+                        link.innerHTML = `
+                            <i class="bi ${item.icon}"></i>
+                            <span>${item.title}</span>
+                        `;
+                        searchResults.appendChild(link);
+                    });
+                }
+                
+                searchResults.classList.add('show');
             }
         });
     </script>

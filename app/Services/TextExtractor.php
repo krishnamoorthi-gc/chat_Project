@@ -35,11 +35,11 @@ class TextExtractor
             $imageData = base64_encode(file_get_contents($filePath));
             $mimeType = mime_content_type($filePath);
             
-            $apiKey = env('GEMINI_API_KEY');
+            $apiKey = env('GEMINI_API_KEY') ?: env('GOOGLE_API_KEY');
             $model = env('GEMINI_MODEL', 'gemini-2.0-flash');
             $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$apiKey}";
 
-            $response = \Illuminate\Support\Facades\Http::post($url, [
+            $response = \Illuminate\Support\Facades\Http::withoutVerifying()->post($url, [
                 'contents' => [
                     [
                         'parts' => [

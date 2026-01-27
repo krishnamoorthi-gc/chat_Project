@@ -28,4 +28,22 @@ class DashboardController extends Controller
 
         return view('dashboard', compact('totalChatbots', 'totalKnowledgeSources', 'activeChatbots', 'totalMessages', 'totalLeads'));
     }
+    public function stats()
+    {
+        try {
+            $data = [
+                'totalChatbots' => Chatbot::count(),
+                'activeChatbots' => Chatbot::where('created_at', '>=', now()->subDays(30))->count(),
+                'totalKnowledgeSources' => KnowledgeSource::count(),
+                'totalLeads' => Lead::count(),
+            ];
+            
+            // Calculate trends (mock logic for now or simple comparison)
+            $data['totalChatbotsTrend'] = '+0%'; // Can be implemented with actual historical data
+            
+            return response()->json($data);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
 }
