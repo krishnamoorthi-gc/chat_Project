@@ -15,10 +15,12 @@ class Conversation extends Model
         'session_id',
         'status',
         'last_message_at',
+        'contact_form_enabled',
     ];
 
     protected $casts = [
         'last_message_at' => 'datetime',
+        'contact_form_enabled' => 'boolean',
     ];
 
     public function chatbot()

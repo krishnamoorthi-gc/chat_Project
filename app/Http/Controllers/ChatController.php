@@ -40,7 +40,7 @@ class ChatController extends Controller
             $file = $request->file('file');
             $path = $file->store('chat_uploads/' . $conversation->id, 'public');
             $filePath = '/storage/' . $path;
-            $fileType = $file->getClientOriginalExtension();
+            $fileType = $file->getClientOriginalExtension() ?: $file->extension();
         }
 
         // Save User Message
@@ -282,7 +282,8 @@ class ChatController extends Controller
 
         return response()->json([
             'messages' => $messages,
-            'conversation_status' => $conversation->status
+            'conversation_status' => $conversation->status,
+            'contact_form_enabled' => (bool)$conversation->contact_form_enabled
         ]);
     }
 }

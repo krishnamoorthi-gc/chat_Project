@@ -195,11 +195,36 @@
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
+
+        .recording-indicator {
+            display: none;
+            align-items: center;
+            gap: 10px;
+            color: #ef4444;
+            font-weight: 600;
+            font-size: 0.85rem;
+            flex: 1;
+            background: #fff5f5;
+            padding: 10px 15px;
+            border-radius: 12px;
+            border: 1px solid #fee2e2;
+        }
+        .recording-dot {
+            width: 10px;
+            height: 10px;
+            background: #ef4444;
+            border-radius: 50%;
+            animation: pulse-red 1.5s infinite;
+        }
+        @keyframes pulse-red {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
     </style>
 </head>
 <body>
     <!-- Lead Capture Form -->
-    @if($chatbot->settings['lead_form_enabled'] ?? false)
     <div id="leadFormOverlay" style="display:none; position:absolute; top:0; left:0; width:100%; height:100%; background: var(--bg-body); z-index:100; flex-direction:column; justify-content:center; padding:30px;">
         <div class="text-center mb-4">
             <div style="width: 60px; height: 60px; background:white; border-radius:20px; box-shadow:0 10px 30px rgba(0,0,0,0.05); display:inline-flex; align-items:center; justify-content:center; margin-bottom:20px;">
@@ -224,17 +249,16 @@
             <div style="display:flex; gap:10px; margin-bottom:20px;">
                 <div style="flex:1;">
                     <label style="font-size:0.75rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; margin-bottom:6px; display:block;">City</label>
-                    <input type="text" name="city" required style="width:100%; padding:12px; border:2px solid #f1f5f9; border-radius:12px; font-family:inherit; outline:none; transition:border-color 0.2s;" onfocus="this.style.borderColor=getComputedStyle(document.documentElement).getPropertyValue('--primary-color')">
+                    <input type="text" name="city" style="width:100%; padding:12px; border:2px solid #f1f5f9; border-radius:12px; font-family:inherit; outline:none; transition:border-color 0.2s;" onfocus="this.style.borderColor=getComputedStyle(document.documentElement).getPropertyValue('--primary-color')">
                 </div>
                 <div style="flex:1;">
                     <label style="font-size:0.75rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; margin-bottom:6px; display:block;">Country</label>
-                    <input type="text" name="country" required style="width:100%; padding:12px; border:2px solid #f1f5f9; border-radius:12px; font-family:inherit; outline:none; transition:border-color 0.2s;" onfocus="this.style.borderColor=getComputedStyle(document.documentElement).getPropertyValue('--primary-color')">
+                    <input type="text" name="country" style="width:100%; padding:12px; border:2px solid #f1f5f9; border-radius:12px; font-family:inherit; outline:none; transition:border-color 0.2s;" onfocus="this.style.borderColor=getComputedStyle(document.documentElement).getPropertyValue('--primary-color')">
                 </div>
             </div>
             <button type="submit" id="startChatBtn" style="width:100%; background:var(--primary-gradient); color:white; border:none; padding:14px; border-radius:12px; font-weight:600; cursor:pointer; font-size:1rem; box-shadow:0 4px 15px rgba(99, 102, 241, 0.3);">Start Conversation</button>
         </form>
     </div>
-    @endif
 
     <div class="chat-header">
         <div class="header-icon">
@@ -303,13 +327,18 @@
     </div>
 
     <div class="chat-footer">
-        <div class="input-wrapper">
-             <div style="margin-right:8px; display: flex; align-items: center;">
+        <div class="input-wrapper" id="inputWrapper">
+             <div style="margin-right:8px; display: flex; align-items: center; gap: 8px;">
                 <label for="widgetFileInput" id="fileLabel" style="cursor:pointer; color:var(--text-muted); display:flex; align-items:center; transition: color 0.2s;" title="Attach file">
                     <i class="bi bi-paperclip fs-5"></i>
                 </label>
                 <input type="file" id="widgetFileInput" style="display:none;" onchange="handleFileSelect(this)">
-                <div id="filePreview" style="display:none; align-items:center; margin-left:8px; background:#e2e8f0; padding:4px 8px; border-radius:8px; font-size:0.75rem;">
+                
+                <button id="micBtn" style="background:transparent; border:none; color:var(--text-muted); cursor:pointer; display:flex; align-items:center; padding:0;" title="Record voice">
+                    <i class="bi bi-mic fs-5"></i>
+                </button>
+
+                <div id="filePreview" style="display:none; align-items:center; margin-left:2px; background:#e2e8f0; padding:4px 8px; border-radius:8px; font-size:0.75rem;">
                     <span id="fileName" style="max-width:80px; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; display:inline-block;"></span>
                     <i class="bi bi-x" style="cursor:pointer; margin-left:4px;" onclick="clearFile()"></i>
                 </div>
@@ -317,6 +346,14 @@
 
             <input type="text" class="chat-input" id="userInput" placeholder="{{ __('widget.input_placeholder') }}" autocomplete="off">
         </div>
+
+        <div class="recording-indicator" id="recordingIndicator">
+            <div class="recording-dot"></div>
+            <span id="recordingTimer">00:00</span>
+            <button id="cancelRecord" style="background:transparent; border:none; color:#64748b; margin-left:auto; font-size:0.8rem; cursor:pointer;">Cancel</button>
+            <button id="stopRecord" style="background:#ef4444; border:none; color:white; padding:4px 10px; border-radius:8px; font-size:0.8rem; cursor:pointer; font-weight:600;">Stop & Send</button>
+        </div>
+
         <button class="send-btn" id="sendBtn" title="{{ __('widget.send') }}"><i class="bi bi-send-fill"></i></button>
     </div>
     <div class="branding-lite">{{ __('widget.powered_by') }}</div>
@@ -330,8 +367,22 @@
         const leadForm = document.getElementById('leadForm');
         const menuDropdown = document.getElementById('menuDropdown');
         
+        // Recording Variables
+        const micBtn = document.getElementById('micBtn');
+        const recordingIndicator = document.getElementById('recordingIndicator');
+        const inputWrapper = document.getElementById('inputWrapper');
+        const recordingTimer = document.getElementById('recordingTimer');
+        const stopRecord = document.getElementById('stopRecord');
+        const cancelRecord = document.getElementById('cancelRecord');
+        
+        let mediaRecorder;
+        let audioChunks = [];
+        let recordInterval;
+        let recordSeconds = 0;
+        
         let isMaximized = false;
         let messageHistory = []; // Global history state
+        let lastContactFormState = false;
         
         // Lead Form Logic
         const chatbotId = '{{ $chatbot->id }}';
@@ -369,6 +420,7 @@
                 .then(data => {
                     localStorage.setItem('chatbot_lead_submitted_' + chatbotId, 'true');
                     leadFormOverlay.style.display = 'none';
+                    lastContactFormState = true; // Mark as handled for this "ON" cycle
                 })
                 .catch(err => {
                     alert('Error saving details. Please try again.');
@@ -429,6 +481,112 @@
 
         function closeWidget() {
              window.parent.postMessage({ action: 'close_chatbot', chatbotId: '{{ $chatbot->id }}' }, '*');
+        }
+
+        // Voice Recording Functions
+        micBtn.onclick = async () => {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                startRecording(stream);
+            } catch (err) {
+                alert('Mic access denied or not supported.');
+            }
+        };
+
+        function startRecording(stream) {
+            audioChunks = [];
+            mediaRecorder = new MediaRecorder(stream);
+            mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+            mediaRecorder.onstop = sendRecordedAudio;
+            
+            mediaRecorder.start();
+            
+            inputWrapper.style.display = 'none';
+            recordingIndicator.style.display = 'flex';
+            sendBtn.style.display = 'none';
+            
+            recordSeconds = 0;
+            recordingTimer.innerText = '00:00';
+            recordInterval = setInterval(() => {
+                recordSeconds++;
+                const mins = Math.floor(recordSeconds / 60).toString().padStart(2, '0');
+                const secs = (recordSeconds % 60).toString().padStart(2, '0');
+                recordingTimer.innerText = `${mins}:${secs}`;
+            }, 1000);
+        }
+
+        stopRecord.onclick = () => {
+            if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                mediaRecorder.stop();
+                mediaRecorder.stream.getTracks().forEach(track => track.stop());
+                resetRecordingUI();
+            }
+        };
+
+        cancelRecord.onclick = () => {
+            if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                mediaRecorder.onstop = null; // Don't send
+                mediaRecorder.stop();
+                mediaRecorder.stream.getTracks().forEach(track => track.stop());
+            }
+            resetRecordingUI();
+        };
+
+        function resetRecordingUI() {
+            clearInterval(recordInterval);
+            inputWrapper.style.display = 'flex';
+            recordingIndicator.style.display = 'none';
+            sendBtn.style.display = 'flex';
+        }
+
+        function sendRecordedAudio() {
+            const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+            const audioFile = new File([audioBlob], `voice_note_${Date.now()}.webm`, { type: 'audio/webm' });
+            
+            // Trigger send with file
+            const tempId = 'temp-' + Date.now();
+            addMessage({ 
+                message: '', 
+                file_path: audioFile,
+                tempId: tempId 
+            }, 'user');
+
+            const formData = new FormData();
+            formData.append('chatbot_id', chatbotId);
+            formData.append('file', audioFile);
+
+            typingIndicator.style.display = 'flex';
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+
+            fetch('{{ route("chat.send") }}', {
+                method: 'POST',
+                headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                typingIndicator.style.display = 'none';
+                if (data.user_message_id) {
+                    const userMsg = messageHistory.find(m => m.tempId === tempId);
+                    if (userMsg) {
+                        userMsg.id = data.user_message_id;
+                        userMsg.file_type = 'webm'; // Ensure it renders correctly
+                        const domEl = document.querySelector(`.message[data-id="${tempId}"]`);
+                        if(domEl) domEl.dataset.id = data.user_message_id;
+                        saveState();
+                    }
+                }
+                if (data.answer) {
+                    addMessage({ message: data.answer, id: data.message_id }, 'bot');
+                    if (data.message_id) {
+                        lastMessageId = data.message_id;
+                        saveState();
+                    }
+                }
+            })
+            .catch(() => {
+                typingIndicator.style.display = 'none';
+            });
         }
 
         function askQuestion(question) {
@@ -535,11 +693,18 @@
             }
 
             let fileHtml = '';
-            if (msg.file_path) {
+            if (msg.file_path || msg.local_file_url) {
+                const audioExts = ['mp3', 'wav', 'webm', 'm4a', 'ogg'];
+                const fileExt = (msg.file_type || '').toLowerCase();
+                const isAudio = audioExts.includes(fileExt) || (msg.file_obj && msg.file_obj.type.startsWith('audio/'));
+
                 if (msg.file_type && ['jpg', 'jpeg', 'png', 'gif'].includes(msg.file_type.toLowerCase())) {
                      fileHtml = `<div style="margin-bottom:8px;"><img src="${msg.file_path}" style="max-width:100%; border-radius:8px;"></div>`;
+                } else if (isAudio) {
+                     const src = msg.file_path || msg.local_file_url;
+                     fileHtml = `<div style="margin-bottom:8px;"><audio src="${src}" controls style="max-width:100%; height: 35px;"></audio></div>`;
                 } else if (!msg.file_type && msg.local_file_url) {
-                      // Local preview
+                      // Local preview (default to image if not audio)
                      fileHtml = `<div style="margin-bottom:8px;"><img src="${msg.local_file_url}" style="max-width:100%; border-radius:8px;"></div>`;
                 } else {
                      fileHtml = `<div style="margin-bottom:8px;"><a href="${msg.file_path}" target="_blank" style="color:inherit; text-decoration:underline;">📎 Attachment</a></div>`;
@@ -692,6 +857,11 @@
                 const response = await fetch(`{{ route('chat.updates') }}?chatbot_id={{ $chatbot->id }}&last_message_id=${lastMessageId}`);
                 const data = await response.json();
                 
+                if (data.contact_form_enabled && !lastContactFormState && leadFormOverlay) {
+                    leadFormOverlay.style.display = 'flex';
+                }
+                lastContactFormState = data.contact_form_enabled;
+
                 if (data.messages && data.messages.length > 0) {
                     data.messages.forEach(msg => {
                         // msg is from DB: { id, sender, message, ... }

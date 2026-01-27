@@ -42,7 +42,7 @@ class ConversationController extends Controller
         if ($request->hasFile('file')) {
             $path = $request->file('file')->store('chat_files', 'public');
             $filePath = Storage::url($path);
-            $fileType = $request->file('file')->getClientOriginalExtension();
+            $fileType = $request->file('file')->getClientOriginalExtension() ?: $request->file('file')->extension();
         }
 
         $message = Message::create([
@@ -67,6 +67,14 @@ class ConversationController extends Controller
         $conversation->save();
 
         return response()->json(['status' => $conversation->status]);
+    }
+
+    public function toggleContactForm(Conversation $conversation)
+    {
+        $conversation->contact_form_enabled = !$conversation->contact_form_enabled;
+        $conversation->save();
+
+        return response()->json(['contact_form_enabled' => $conversation->contact_form_enabled]);
     }
 
     public function getUpdates(Conversation $conversation)

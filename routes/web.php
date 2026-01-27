@@ -42,6 +42,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/conversations/{conversation}', [App\Http\Controllers\ConversationController::class, 'show'])->name('conversations.show');
     Route::post('/conversations/{conversation}/reply', [App\Http\Controllers\ConversationController::class, 'reply'])->name('conversations.reply');
     Route::post('/conversations/{conversation}/toggle-status', [App\Http\Controllers\ConversationController::class, 'toggleStatus'])->name('conversations.toggle');
+    Route::post('/conversations/{conversation}/toggle-contact-form', [App\Http\Controllers\ConversationController::class, 'toggleContactForm'])->name('conversations.toggleContactForm');
     Route::get('/conversations/{conversation}/updates', [App\Http\Controllers\ConversationController::class, 'getUpdates'])->name('conversations.updates');
 });
 
