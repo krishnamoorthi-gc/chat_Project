@@ -17,10 +17,75 @@
     @vite(['resources/sass/app.scss', 'resources/js/app.js'])
 
     <style>
-        /* Admin specific styles */
-        .sidebar { background: #1a1b1e; }
-        .nav-item-custom.active { background: #6c5dd3; }
-        .nav-item-custom:hover { background: #2b2c31; }
+        body { font-family: 'Inter', sans-serif; background: #f4f7fe; }
+        .dashboard-wrapper { display: flex; min-height: 100vh; }
+        
+        /* Sidebar Styles */
+        .sidebar { 
+            width: 280px; 
+            background: #11142d; 
+            color: #808191; 
+            display: flex; 
+            flex-direction: column; 
+            padding: 24px;
+            transition: all 0.3s ease;
+        }
+        .sidebar-header { margin-bottom: 40px; }
+        .nav-item-custom { 
+            display: flex; 
+            align-items: center; 
+            padding: 12px 20px; 
+            border-radius: 12px; 
+            color: #808191; 
+            text-decoration: none; 
+            margin-bottom: 8px; 
+            transition: all 0.3s;
+            gap: 12px;
+        }
+        .nav-item-custom i { font-size: 1.25rem; }
+        .nav-item-custom:hover { background: rgba(108, 93, 211, 0.1); color: #6c5dd3; }
+        .nav-item-custom.active { background: #6c5dd3; color: #ffffff !important; box-shadow: 0 10px 20px rgba(108, 93, 211, 0.2); }
+        .nav-item-custom.active i { color: #ffffff !important; }
+        
+        /* Main Content */
+        .main-content { flex: 1; display: flex; flex-direction: column; background: #f4f7fe; }
+        .top-bar { 
+            background: #ffffff; 
+            padding: 16px 40px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .page-title { color: #11142d; font-weight: 700; font-size: 1.5rem; }
+        
+        /* Mobile Toggle */
+        .mobile-nav-toggle { display: none; }
+        
+        @media (max-width: 991px) {
+            .sidebar { position: fixed; left: -280px; z-index: 1001; height: 100vh; }
+            .sidebar.active { left: 0; }
+            .mobile-nav-toggle { 
+                display: block; 
+                position: fixed; 
+                top: 20px; 
+                left: 20px; 
+                z-index: 1000; 
+                background: white; 
+                border: none; 
+                padding: 10px; 
+                border-radius: 8px; 
+                box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            }
+            .mobile-overlay { 
+                display: none; 
+                position: fixed; 
+                inset: 0; 
+                background: rgba(0,0,0,0.5); 
+                z-index: 1000; 
+            }
+            .mobile-overlay.active { display: block; }
+        }
     </style>
 </head>
 <body>
@@ -49,6 +114,10 @@
                     <a href="{{ route('admin.users.index') }}" class="nav-item-custom {{ Route::is('admin.users.*') ? 'active' : '' }}">
                         <i class="bi bi-people-fill"></i>
                         <span>User Management</span>
+                    </a>
+                    <a href="{{ route('admin.pricing.index') }}" class="nav-item-custom {{ Route::is('admin.pricing.*') ? 'active' : '' }}">
+                        <i class="bi bi-tags-fill"></i>
+                        <span>Pricing Management</span>
                     </a>
                     
                     <div style="margin-top: auto;"></div>

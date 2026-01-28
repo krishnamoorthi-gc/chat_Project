@@ -1675,62 +1675,27 @@
         </div>
 
         <div class="pricing-grid">
-            <!-- Starter Plan -->
-            <div class="pricing-card">
-                <div class="plan-name">Starter</div>
+            @foreach($plans as $plan)
+            <div class="pricing-card {{ $plan->name == 'Pro' ? 'popular' : '' }}">
+                @if($plan->name == 'Pro')
+                    <div class="popular-badge">Most Popular</div>
+                @endif
+                <div class="plan-name">{{ $plan->name }}</div>
                 <div class="trial-badge">7 Days Free Trial</div>
-                <div class="plan-price"><span>$</span>10</div>
-                <p style="color: var(--gray); margin-bottom: 2rem;">Per month, billed monthly</p>
+                <div class="plan-price"><span>$</span>{{ number_format($plan->price, 0) }}</div>
+                <p style="color: {{ $plan->name == 'Pro' ? 'rgba(255,255,255,0.6)' : 'var(--gray)' }}; margin-bottom: 2rem;">Per month, billed {{ $plan->billing_cycle }}</p>
                 
                 <ul class="plan-features">
-                    <li><i class="bi bi-check-circle-fill"></i> 1,000 Messages/mo</li>
-                    <li><i class="bi bi-check-circle-fill"></i> 1 Custom Chatbot</li>
-                    <li><i class="bi bi-check-circle-fill"></i> Basic AI Training</li>
-                    <li><i class="bi bi-check-circle-fill"></i> Web Widget Embed</li>
-                    <li><i class="bi bi-check-circle-fill"></i> Email Support</li>
+                    @foreach($plan->features ?? [] as $feature)
+                        <li><i class="bi bi-check-circle-fill"></i> {{ $feature }}</li>
+                    @endforeach
                 </ul>
                 
-                <a href="{{ route('register') }}" class="btn btn-outline">Get Started</a>
+                <a href="{{ $plan->payment_url ?? route('register') }}" class="btn {{ $plan->name == 'Pro' ? 'btn-primary' : 'btn-outline' }}">
+                    {{ $plan->name == 'Free' ? 'Get Started' : ($plan->name == 'Pro' ? 'Start Pro Trial' : 'Contact Sales') }}
+                </a>
             </div>
-
-            <!-- Pro Plan -->
-            <div class="pricing-card popular">
-                <div class="popular-badge">Most Popular</div>
-                <div class="plan-name">Pro</div>
-                <div class="trial-badge">7 Days Free Trial</div>
-                <div class="plan-price"><span>$</span>30</div>
-                <p style="color: rgba(255,255,255,0.6); margin-bottom: 2rem;">Per month, billed monthly</p>
-                
-                <ul class="plan-features">
-                    <li><i class="bi bi-check-circle-fill"></i> 10,000 Messages/mo</li>
-                    <li><i class="bi bi-check-circle-fill"></i> 5 Custom Chatbots</li>
-                    <li><i class="bi bi-check-circle-fill"></i> Advanced GPT-4 Training</li>
-                    <li><i class="bi bi-check-circle-fill"></i> Lead Generation Forms</li>
-                    <li><i class="bi bi-check-circle-fill"></i> Priority Support</li>
-                    <li><i class="bi bi-check-circle-fill"></i> CRM Integrations</li>
-                </ul>
-                
-                <a href="{{ route('register') }}" class="btn btn-primary">Start Pro Trial</a>
-            </div>
-
-            <!-- Enterprise Plan -->
-            <div class="pricing-card">
-                <div class="plan-name">Enterprise</div>
-                <div class="trial-badge">7 Days Free Trial</div>
-                <div class="plan-price"><span>$</span>99</div>
-                <p style="color: var(--gray); margin-bottom: 2rem;">Per month, billed monthly</p>
-                
-                <ul class="plan-features">
-                    <li><i class="bi bi-check-circle-fill"></i> Unlimited Messages</li>
-                    <li><i class="bi bi-check-circle-fill"></i> Unlimited Chatbots</li>
-                    <li><i class="bi bi-check-circle-fill"></i> Custom AI Models</li>
-                    <li><i class="bi bi-check-circle-fill"></i> Full API Access</li>
-                    <li><i class="bi bi-check-circle-fill"></i> Dedicated Account Manager</li>
-                    <li><i class="bi bi-check-circle-fill"></i> 24/7 Phone Support</li>
-                </ul>
-                
-                <a href="{{ route('register') }}" class="btn btn-outline">Contact Sales</a>
-            </div>
+            @endforeach
         </div>
     </section>
 

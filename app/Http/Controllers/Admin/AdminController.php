@@ -13,7 +13,78 @@ class AdminController extends Controller
         $totalBots = \App\Models\Chatbot::count();
         $recentUsers = \App\Models\User::where('is_admin', false)->latest()->take(5)->get();
         
-        return view('admin.dashboard', compact('totalUsers', 'totalBots', 'recentUsers'));
+        // Analytics
+        $totalVisits = \App\Models\LandingPageVisit::count();
+        $todayVisits = \App\Models\LandingPageVisit::whereDate('created_at', \Carbon\Carbon::today())->count();
+        $visitsByDay = \App\Models\LandingPageVisit::selectRaw('DATE(created_at) as date, count(*) as count')
+            ->groupBy('date')
+            ->orderBy('date', 'desc')
+            ->take(7)
+            ->get()
+            ->reverse();
+
+        return view('admin.dashboard', compact(
+            'totalUsers', 'totalBots', 'recentUsers', 
+            'totalVisits', 'todayVisits', 'visitsByDay'
+        ));
+    }
+
+    public function pricing()
+    {
+        $plans = \App\Models\PricingPlan::latest()->get();
+        return view('admin.pricing.index', compact('plans'));
+    }
+
+    public function storePricing(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'price' => 'required|numeric',
+            'payment_url' => 'required|url',
+        ]);
+
+        $featuresString = $request->input('features_text') ?? '';
+        $features = array_filter(array_map('trim', explode("\n", $featuresString)));
+
+        \App\Models\PricingPlan::create([
+            'name' => $request->name,
+            'price' => $request->price,
+            'payment_url' => $request->payment_url,
+            'description' => $request->description,
+            'features' => $features,
+            'billing_cycle' => $request->billing_cycle ?? 'monthly',
+        ]);
+
+        return back()->with('success', 'Pricing plan created successfully.');
+    }
+
+    public function updatePricing(Request $request, \App\Models\PricingPlan $plan)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'price' => 'required|numeric',
+            'payment_url' => 'required|url',
+        ]);
+
+        $featuresString = $request->input('features_text') ?? '';
+        $features = array_filter(array_map('trim', explode("\n", $featuresString)));
+
+        $plan->update([
+            'name' => $request->name,
+            'price' => $request->price,
+            'payment_url' => $request->payment_url,
+            'description' => $request->description,
+            'features' => $features,
+            'billing_cycle' => $request->billing_cycle ?? 'monthly',
+        ]);
+
+        return back()->with('success', 'Pricing plan updated successfully.');
+    }
+
+    public function destroyPricing(\App\Models\PricingPlan $plan)
+    {
+        $plan->delete();
+        return back()->with('success', 'Pricing plan deleted successfully.');
     }
 
     public function users()

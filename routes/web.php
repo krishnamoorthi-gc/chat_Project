@@ -6,7 +6,8 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/', function () {
-    return view('welcome');
+    $plans = \App\Models\PricingPlan::where('is_active', true)->get();
+    return view('welcome', compact('plans'));
 });
 
 Auth::routes();
@@ -72,5 +73,14 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('/users/{user}/toggle-status', [App\Http\Controllers\Admin\AdminController::class, 'toggleStatus'])->name('users.toggle-status');
         Route::post('/users/{user}/update-plan', [App\Http\Controllers\Admin\AdminController::class, 'updatePlan'])->name('users.update-plan');
         Route::get('/users/{user}/bots', [App\Http\Controllers\Admin\AdminController::class, 'showUserBots'])->name('users.bots');
+        
+        // Pricing Management
+        Route::get('/pricing', [App\Http\Controllers\Admin\AdminController::class, 'pricing'])->name('pricing.index');
+        Route::post('/pricing', [App\Http\Controllers\Admin\AdminController::class, 'storePricing'])->name('pricing.store');
+        Route::post('/pricing/{plan}', [App\Http\Controllers\Admin\AdminController::class, 'updatePricing'])->name('pricing.update');
+        Route::delete('/pricing/{plan}', [App\Http\Controllers\Admin\AdminController::class, 'destroyPricing'])->name('pricing.destroy');
+
+        // Analytics
+        Route::get('/stats', [App\Http\Controllers\Admin\AdminAnalyticsController::class, 'stats'])->name('stats');
     });
 });
